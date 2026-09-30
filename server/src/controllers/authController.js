@@ -121,10 +121,39 @@ export const GoogleUserLogin = async (req, res, next) => {
     }
 
     generateToken(existingUser._id, res);
+
+    const userData = existingUser.toObject();
+    delete userData.password;
+    delete userData.google_id;
+
     res.status(200).json({
       message: "Login successful",
-      data: existingUser,
+      data: userData,
     });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// ================= LOGOUT =================
+export const UserLogout = async (req, res, next) => {
+  try {
+    const isProd = process.env.NODE_ENV === "production";
+    res.clearCookie("token", {
+      httpOnly: true,
+      secure: isProd,
+      sameSite: process.env.COOKIE_SAME_SITE || (isProd ? "none" : "lax"),
+    });
+    res.status(200).json({ message: "Logged out successfully" });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// ================= GET ME =================
+export const GetMe = async (req, res, next) => {
+  try {
+    res.status(200).json({ data: req.user });
   } catch (error) {
     next(error);
   }

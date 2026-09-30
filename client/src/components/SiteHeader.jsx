@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
 const SiteHeader = () => {
   const { user, isLogin } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const [selectedTheme, setSelectedTheme] = useState("light");
 
   useEffect(() => {
@@ -20,66 +21,95 @@ const SiteHeader = () => {
     document.documentElement.setAttribute("data-theme", theme);
   };
 
+  const handleProfileClick = () => {
+    if (location.pathname === "/settings" || location.pathname === "/dashboard") {
+      navigate("/chat");
+    } else {
+      navigate("/settings");
+    }
+  };
+
   return (
-    <div className="navbar bg-primary text-primary-content shadow-lg px-4 sticky top-0 z-50">
+    <header className="navbar backdrop-blur-md bg-base-100/85 text-base-content border-b border-base-200 sticky top-0 z-50 px-4 sm:px-6 shadow-2xs transition-all">
       <div className="navbar-start">
         <div
-          className="flex items-center gap-2 cursor-pointer"
+          className="flex items-center gap-2.5 cursor-pointer group"
           onClick={() => navigate("/")}
         >
-          <span className="text-2xl">💬</span>
-          <span className="text-xl font-extrabold tracking-tight">Mingo</span>
+          <div className="size-9 rounded-xl bg-gradient-to-tr from-primary via-accent to-secondary flex items-center justify-center shadow-md group-hover:scale-105 transition-transform">
+            <span className="text-white text-lg">💬</span>
+          </div>
+          <div className="flex flex-col">
+            <span className="text-xl font-extrabold tracking-tight bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+              Mingo
+            </span>
+          </div>
         </div>
       </div>
 
-      <div className="navbar-end gap-2">
+      <div className="navbar-end gap-2.5">
         {isLogin ? (
-          <div
-            className="flex items-center gap-2 cursor-pointer px-3 py-1.5 rounded-lg hover:bg-primary-content/10 transition"
-            onClick={() => navigate("/dashboard")}
-          >
-            <div className="avatar avatar-placeholder">
-              <div className="size-8 rounded-full bg-primary-content/20 text-primary font-bold text-sm flex items-center justify-center">
-                {(user?.fullName?.[0] || user?.email?.[0] || "U").toUpperCase()}
-              </div>
-            </div>
-            <span className="font-semibold text-sm hidden sm:block">
-              {user?.fullName?.split(" ")[0] || user?.email?.split("@")[0]}
-            </span>
-          </div>
-        ) : (
-          <div className="flex gap-2">
+          <>
             <button
-              className="btn btn-sm btn-outline text-primary-content border border-primary-content/40"
+              onClick={() => navigate("/chat")}
+              className="btn btn-ghost btn-sm font-semibold gap-1.5 hidden sm:flex hover:bg-base-200"
+            >
+              <span>💬</span>
+              <span>Chats</span>
+            </button>
+            <div
+              className="flex items-center gap-2.5 cursor-pointer px-3 py-1.5 rounded-full bg-base-200/70 hover:bg-base-200 transition border border-base-300/50"
+              onClick={handleProfileClick}
+              title={location.pathname === "/settings" || location.pathname === "/dashboard" ? "Close Settings" : "Open Settings"}
+            >
+              <div className="avatar">
+                <div className="size-7 rounded-full bg-primary text-primary-content font-bold text-xs flex items-center justify-center overflow-hidden ring-1 ring-primary/30">
+                  {user?.profilePic ? (
+                    <img src={user.profilePic} alt={user.fullName} className="size-full object-cover" />
+                  ) : (
+                    (user?.fullName?.[0] || user?.email?.[0] || "U").toUpperCase()
+                  )}
+                </div>
+              </div>
+              <span className="font-semibold text-xs text-base-content hidden sm:block max-w-[100px] truncate">
+                {user?.fullName?.split(" ")[0] || user?.email?.split("@")[0]}
+              </span>
+            </div>
+          </>
+        ) : (
+          <div className="flex items-center gap-2">
+            <button
+              className="btn btn-sm btn-ghost text-base-content hover:bg-base-200 font-medium"
               onClick={() => navigate("/login")}
             >
               Login
             </button>
             <button
-              className="btn btn-sm bg-primary-content text-primary font-semibold hover:opacity-90"
+              className="btn btn-sm btn-primary shadow-sm font-semibold hover:shadow transition-shadow"
               onClick={() => navigate("/register")}
             >
-              Register
+              Get Started
             </button>
           </div>
         )}
 
         <select
-          className="select select-sm bg-primary/60 text-primary-content border-primary-content/30 w-fit"
+          className="select select-sm bg-base-200/80 border-base-300 text-base-content text-xs font-medium w-fit rounded-lg focus:outline-none"
           value={selectedTheme}
           onChange={handleThemeChange}
+          aria-label="Select Theme"
         >
-          <option value="light">Light</option>
-          <option value="dark">Dark</option>
-          <option value="black">Black</option>
-          <option value="spotify">Spotify</option>
-          <option value="claude">Claude</option>
-          <option value="corporate">Corporate</option>
-          <option value="ghibli">Ghibli</option>
-          <option value="halloween">Halloween</option>
+          <option value="light">☀️ Light</option>
+          <option value="dark">🌙 Dark</option>
+          <option value="black">🖤 Black</option>
+          <option value="spotify">🎧 Spotify</option>
+          <option value="claude">🤖 Claude</option>
+          <option value="corporate">💼 Corporate</option>
+          <option value="ghibli">🌱 Ghibli</option>
+          <option value="halloween">🎃 Halloween</option>
         </select>
       </div>
-    </div>
+    </header>
   );
 };
 

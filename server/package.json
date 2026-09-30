@@ -1,23 +1,28 @@
 {
   "name": "server",
   "version": "1.0.0",
-  "description": "",
+  "description": "Mingo Chat App Backend",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "nodemon index.js"
   },
   "keywords": [],
-  "author": "",
+  "author": "Devendra bankhede",
   "license": "ISC",
-  "type": "commonjs",
+  "type": "module",
   "dependencies": {
-    "bcryptjs": "^3.0.3",
+    "bcrypt": "^6.0.0",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.6",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
+    "google-auth-library": "^11.0.2",
     "jsonwebtoken": "^9.0.3",
-    "mongoose": "^9.9.3",
+    "mongoose": "^9.9.2",
+    "morgan": "^1.11.0",
+    "multer": "^2.2.0",
+    "nodemailer": "^9.0.5",
     "socket.io": "^4.8.3"
   },
   "devDependencies": {

@@ -83,21 +83,25 @@ const Register = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-base-200 px-4 py-10">
-      <div className="w-full max-w-xl">
-        {/* Branding */}
+    <div className="min-h-[calc(100vh-64px)] flex items-center justify-center bg-base-200/50 px-4 py-10 relative overflow-hidden">
+      <div className="absolute top-1/4 right-1/3 size-96 bg-accent/10 rounded-full blur-3xl pointer-events-none" />
+
+      <div className="w-full max-w-lg z-10">
+        {/* Branding Header */}
         <div className="text-center mb-6">
-          <span className="text-6xl">✨</span>
-          <h2 className="text-3xl font-extrabold mt-3 text-base-content">Create Account</h2>
-          <p className="text-base-content/50 mt-1">Join Mingo and start chatting</p>
+          <div className="inline-flex size-14 rounded-2xl bg-gradient-to-tr from-accent to-primary items-center justify-center text-2xl text-primary-content shadow-lg shadow-primary/20 mb-3 animate-float">
+            ✨
+          </div>
+          <h2 className="text-3xl font-extrabold tracking-tight text-base-content">Create Account</h2>
+          <p className="text-base-content/60 text-sm mt-1">Join Mingo to start chatting with your friends</p>
         </div>
 
-        <div className="card bg-base-100 shadow-xl">
-          <div className="card-body gap-4">
-            <form onSubmit={handleSubmit} onReset={handleClearForm} className="space-y-3">
+        <div className="card bg-base-100/90 backdrop-blur-md shadow-xl border border-base-300/60 rounded-3xl">
+          <div className="card-body gap-4 p-6 sm:p-8">
+            <form onSubmit={handleSubmit} onReset={handleClearForm} className="space-y-3.5">
 
               <div className="space-y-1">
-                <label className="text-sm font-semibold text-base-content/70">Full Name</label>
+                <label className="text-xs font-bold text-base-content/70 uppercase tracking-wider">Full Name</label>
                 <input
                   type="text"
                   name="fullName"
@@ -105,15 +109,15 @@ const Register = () => {
                   value={formData.fullName}
                   onChange={handleChange}
                   disabled={isLoading}
-                  className={`input input-bordered w-full ${validationError.fullName ? "input-error" : ""}`}
+                  className={`input input-bordered w-full text-sm rounded-xl focus:outline-none focus:border-primary ${validationError.fullName ? "input-error" : ""}`}
                 />
                 {validationError.fullName && (
-                  <p className="text-error text-xs mt-1">{validationError.fullName}</p>
+                  <p className="text-error text-[11px] font-medium mt-1">{validationError.fullName}</p>
                 )}
               </div>
 
               <div className="space-y-1">
-                <label className="text-sm font-semibold text-base-content/70">Email Address</label>
+                <label className="text-xs font-bold text-base-content/70 uppercase tracking-wider">Email Address</label>
                 <input
                   type="email"
                   name="email"
@@ -121,15 +125,15 @@ const Register = () => {
                   value={formData.email}
                   onChange={handleChange}
                   disabled={isLoading}
-                  className={`input input-bordered w-full ${validationError.email ? "input-error" : ""}`}
+                  className={`input input-bordered w-full text-sm rounded-xl focus:outline-none focus:border-primary ${validationError.email ? "input-error" : ""}`}
                 />
                 {validationError.email && (
-                  <p className="text-error text-xs mt-1">{validationError.email}</p>
+                  <p className="text-error text-[11px] font-medium mt-1">{validationError.email}</p>
                 )}
               </div>
 
               <div className="space-y-1">
-                <label className="text-sm font-semibold text-base-content/70">Mobile Number</label>
+                <label className="text-xs font-bold text-base-content/70 uppercase tracking-wider">Mobile Number</label>
                 <input
                   type="tel"
                   name="mobileNumber"
@@ -138,16 +142,16 @@ const Register = () => {
                   value={formData.mobileNumber}
                   onChange={handleChange}
                   disabled={isLoading}
-                  className={`input input-bordered w-full ${validationError.mobileNumber ? "input-error" : ""}`}
+                  className={`input input-bordered w-full text-sm rounded-xl focus:outline-none focus:border-primary ${validationError.mobileNumber ? "input-error" : ""}`}
                 />
                 {validationError.mobileNumber && (
-                  <p className="text-error text-xs mt-1">{validationError.mobileNumber}</p>
+                  <p className="text-error text-[11px] font-medium mt-1">{validationError.mobileNumber}</p>
                 )}
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div className="space-y-1">
-                  <label className="text-sm font-semibold text-base-content/70">Password</label>
+                  <label className="text-xs font-bold text-base-content/70 uppercase tracking-wider">Password</label>
                   <input
                     type="password"
                     name="password"
@@ -155,12 +159,12 @@ const Register = () => {
                     value={formData.password}
                     onChange={handleChange}
                     disabled={isLoading}
-                    className="input input-bordered w-full"
+                    className="input input-bordered w-full text-sm rounded-xl focus:outline-none focus:border-primary"
                   />
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-sm font-semibold text-base-content/70">Confirm Password</label>
+                  <label className="text-xs font-bold text-base-content/70 uppercase tracking-wider">Confirm Password</label>
                   <input
                     type="password"
                     name="confirmPassword"
@@ -168,35 +172,35 @@ const Register = () => {
                     value={formData.confirmPassword}
                     onChange={handleChange}
                     disabled={isLoading}
-                    className={`input input-bordered w-full ${validationError.confirmPassword ? "input-error" : ""}`}
+                    className={`input input-bordered w-full text-sm rounded-xl focus:outline-none focus:border-primary ${validationError.confirmPassword ? "input-error" : ""}`}
                   />
                   {validationError.confirmPassword && (
-                    <p className="text-error text-xs mt-1">{validationError.confirmPassword}</p>
+                    <p className="text-error text-[11px] font-medium mt-1">{validationError.confirmPassword}</p>
                   )}
                 </div>
               </div>
 
-              <div className="flex gap-3 pt-4">
-                <button type="reset" disabled={isLoading} className="btn btn-ghost flex-1">
+              <div className="flex gap-3 pt-3">
+                <button type="reset" disabled={isLoading} className="btn btn-ghost flex-1 rounded-xl text-xs font-semibold">
                   Clear
                 </button>
-                <button type="submit" disabled={isLoading} className="btn btn-primary flex-1">
-                  {isLoading ? <span className="loading loading-spinner loading-sm" /> : "Register"}
+                <button type="submit" disabled={isLoading} className="btn btn-primary flex-1 rounded-xl font-bold shadow-md shadow-primary/20">
+                  {isLoading ? <span className="loading loading-spinner loading-sm" /> : "Create Account"}
                 </button>
               </div>
             </form>
 
-            <p className="text-center text-sm text-base-content/50">
+            <p className="text-center text-xs text-base-content/60 font-medium pt-2">
               Already have an account?{" "}
-              <Link to="/login" className="text-primary font-semibold hover:underline">
-                Login here
+              <Link to="/login" className="text-primary font-bold hover:underline">
+                Sign In here
               </Link>
             </p>
           </div>
         </div>
 
-        <p className="text-center text-xs text-base-content/30 mt-5">
-          🔒 We respect your privacy
+        <p className="text-center text-[11px] text-base-content/40 mt-5 font-medium">
+          🔒 We respect your privacy and protect your credentials
         </p>
       </div>
     </div>

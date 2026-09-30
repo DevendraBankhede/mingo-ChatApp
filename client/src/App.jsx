@@ -25,6 +25,7 @@ const App = () => {
         <Route path="/chat" element={<Chat />} />
         <Route path="/contact" element={<ContactUs />} />
         <Route path="/dashboard" element={<UserDashboard />} />
+        <Route path="/settings" element={<UserDashboard />} />
       </Routes>
     </>
   );

@@ -70,20 +70,24 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-[calc(100vh-64px)] flex items-center justify-center bg-base-200 px-4">
-      <div className="w-full max-w-md">
-        {/* Branding */}
+    <div className="min-h-[calc(100vh-64px)] flex items-center justify-center bg-base-200/50 px-4 py-12 relative overflow-hidden">
+      <div className="absolute top-1/3 left-1/2 -translate-x-1/2 size-96 bg-primary/10 rounded-full blur-3xl pointer-events-none" />
+
+      <div className="w-full max-w-md z-10">
+        {/* Branding Header */}
         <div className="text-center mb-6">
-          <span className="text-6xl">💬</span>
-          <h2 className="text-3xl font-extrabold mt-3 text-base-content">Welcome back</h2>
-          <p className="text-base-content/50 mt-1">Sign in to your Mingo account</p>
+          <div className="inline-flex size-14 rounded-2xl bg-gradient-to-tr from-primary to-accent items-center justify-center text-2xl text-primary-content shadow-lg shadow-primary/20 mb-3 animate-float">
+            💬
+          </div>
+          <h2 className="text-3xl font-extrabold tracking-tight text-base-content">Welcome back</h2>
+          <p className="text-base-content/60 text-sm mt-1">Sign in to your Mingo account to start chatting</p>
         </div>
 
-        <div className="card bg-base-100 shadow-xl">
-          <div className="card-body gap-5">
+        <div className="card bg-base-100/90 backdrop-blur-md shadow-xl border border-base-300/60 rounded-3xl">
+          <div className="card-body gap-5 p-6 sm:p-8">
             <form onSubmit={handleSubmit} onReset={handleClearForm} className="space-y-4">
-              <div className="space-y-1">
-                <label className="text-sm font-semibold text-base-content/70">Email address</label>
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-base-content/70 uppercase tracking-wider">Email address</label>
                 <input
                   type="email"
                   name="email"
@@ -92,12 +96,12 @@ const Login = () => {
                   onChange={handleChange}
                   disabled={loading}
                   required
-                  className="input input-bordered w-full"
+                  className="input input-bordered w-full text-sm rounded-xl focus:outline-none focus:border-primary"
                 />
               </div>
 
-              <div className="space-y-1">
-                <label className="text-sm font-semibold text-base-content/70">Password</label>
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-base-content/70 uppercase tracking-wider">Password</label>
                 <input
                   type="password"
                   name="password"
@@ -106,38 +110,38 @@ const Login = () => {
                   onChange={handleChange}
                   disabled={loading}
                   required
-                  className="input input-bordered w-full"
+                  className="input input-bordered w-full text-sm rounded-xl focus:outline-none focus:border-primary"
                 />
               </div>
 
               <div className="flex gap-3 pt-2">
-                <button type="reset" disabled={loading} className="btn btn-ghost flex-1">
+                <button type="reset" disabled={loading} className="btn btn-ghost flex-1 rounded-xl text-xs font-semibold">
                   Clear
                 </button>
-                <button type="submit" disabled={loading} className="btn btn-primary flex-1">
-                  {loading ? <span className="loading loading-spinner loading-sm" /> : "Login"}
+                <button type="submit" disabled={loading} className="btn btn-primary flex-1 rounded-xl font-bold shadow-md shadow-primary/20">
+                  {loading ? <span className="loading loading-spinner loading-sm" /> : "Sign In"}
                 </button>
               </div>
             </form>
 
-            <div className="divider text-base-content/40 text-xs my-0">OR</div>
+            <div className="divider text-base-content/30 text-xs my-0 font-medium">OR</div>
 
             {/* Google Login */}
             {error ? (
               <button
-                className="btn btn-outline btn-error w-full gap-2"
+                className="btn btn-outline btn-error w-full gap-2 rounded-xl text-xs font-semibold"
                 disabled
               >
-                <FcGoogle className="text-xl" />
+                <FcGoogle className="text-lg" />
                 {error}
               </button>
             ) : (
               <button
                 onClick={handleGoogleLogin}
-                className="btn btn-outline w-full gap-2"
+                className="btn btn-outline w-full gap-2 rounded-xl border-base-300 hover:bg-base-200 text-xs font-semibold"
                 disabled={!isInitialized || isLoading || loading}
               >
-                <FcGoogle className="text-xl" />
+                <FcGoogle className="text-lg" />
                 {isLoading
                   ? <span className="loading loading-spinner loading-sm" />
                   : isInitialized
@@ -146,17 +150,17 @@ const Login = () => {
               </button>
             )}
 
-            <p className="text-center text-sm text-base-content/50">
-              No account?{" "}
-              <Link to="/register" className="text-primary font-semibold hover:underline">
-                Register here
+            <p className="text-center text-xs text-base-content/60 font-medium">
+              Don't have an account?{" "}
+              <Link to="/register" className="text-primary font-bold hover:underline">
+                Create Account
               </Link>
             </p>
           </div>
         </div>
 
-        <p className="text-center text-xs text-base-content/30 mt-5">
-          🔐 Your data is encrypted and secure
+        <p className="text-center text-[11px] text-base-content/40 mt-6 font-medium">
+          🔒 Encrypted &amp; Protected by JWT Authentication
         </p>
       </div>
     </div>
