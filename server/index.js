@@ -56,14 +56,13 @@ app.use((err, req, res, next) => {
   console.error("❌ Error:", err);
   res.status(statusCode).json({ success: false, message });
 });
-
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 10000;
 
 const httpServer = http.createServer(app);
 
 const io = new Server(httpServer, {
   cors: {
-    origin: ["http://localhost:5173", process.env.FRONTEND_URL].filter(Boolean),
+    origin: allowedOrigins,
     credentials: true,
     methods: ["GET", "POST"],
   },
@@ -71,7 +70,18 @@ const io = new Server(httpServer, {
 
 WebSocket(io);
 
-httpServer.listen(PORT, async () => {
-  await connectDB();
-  console.log("🔗 Server started at port:", PORT);
-});
+async function startServer() {
+  try {
+    await connectDB();
+    console.log("✅ MongoDB connected");
+
+    httpServer.listen(PORT, "0.0.0.0", () => {
+      console.log(`🚀 Server running on 0.0.0.0:${PORT}`);
+    });
+  } catch (error) {
+    console.error("❌ Server startup failed:", error);
+    process.exit(1);
+  }
+}
+
+startServer();
