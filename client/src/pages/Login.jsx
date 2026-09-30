@@ -29,6 +29,9 @@ const Login = () => {
     try {
       const res = await api.post("/auth/googleLogin", userData);
       toast.success(res.data.message);
+      if (res.data?.token) {
+        sessionStorage.setItem("AppToken", res.data.token);
+      }
       sessionStorage.setItem("AppUser", JSON.stringify(res.data.data));
       setUser(res.data.data);
       setIsLogin(true);
@@ -56,6 +59,9 @@ const Login = () => {
     try {
       const res = await api.post("/auth/login", formData);
       toast.success(res.data.message);
+      if (res.data?.token) {
+        sessionStorage.setItem("AppToken", res.data.token);
+      }
       sessionStorage.setItem("AppUser", JSON.stringify(res.data.data));
       setUser(res.data.data);
       setIsLogin(true);
@@ -68,6 +74,7 @@ const Login = () => {
       setLoading(false);
     }
   };
+
 
   return (
     <div className="min-h-[calc(100vh-64px)] flex items-center justify-center bg-base-200/50 px-4 py-12 relative overflow-hidden">

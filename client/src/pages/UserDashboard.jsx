@@ -204,10 +204,12 @@ const UserDashboard = () => {
     } finally {
       setUser(null);
       sessionStorage.removeItem("AppUser");
+      sessionStorage.removeItem("AppToken");
       setIsLogin(false);
       navigate("/login");
     }
   };
+
 
   return (
     <div className="min-h-[calc(100vh-64px)] bg-base-200/50 py-5 px-4 sm:px-6 relative overflow-hidden">

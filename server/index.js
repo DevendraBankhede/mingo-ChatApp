@@ -21,14 +21,19 @@ import WebSocket from "./src/config/webSocket.js";
 
 const app = express();
 
+app.set("trust proxy", 1);
+
 /* =========================================================
    CORS
 ========================================================= */
 
+const rawFrontendUrl = process.env.FRONTEND_URL;
 const allowedOrigins = [
   "http://localhost:5173",
-  process.env.FRONTEND_URL,
-].filter(Boolean);
+  "http://localhost:3000",
+  "https://mingo-chat-app-eight.vercel.app",
+  ...(rawFrontendUrl ? [rawFrontendUrl.replace(/\/+$/, "")] : []),
+];
 
 console.log("🌐 Allowed Origins:", allowedOrigins);
 
@@ -38,15 +43,27 @@ if (!fs.existsSync(uploadsDir)) {
   fs.mkdirSync(uploadsDir, { recursive: true });
 }
 
-
 app.use(
   cors({
-    origin: allowedOrigins,
+    origin: (origin, callback) => {
+      if (!origin) return callback(null, true);
+      const cleanOrigin = origin.replace(/\/+$/, "");
+      const isAllowed = allowedOrigins.some(
+        (allowed) => allowed.replace(/\/+$/, "") === cleanOrigin
+      );
+      if (isAllowed) {
+        callback(null, true);
+      } else {
+        console.warn(`⚠️ CORS blocked for origin: ${origin}`);
+        callback(null, false);
+      }
+    },
     credentials: true,
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
+
 
 app.use(express.json({ limit: "10mb" }));
 

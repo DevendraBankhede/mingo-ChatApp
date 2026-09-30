@@ -13,7 +13,9 @@ export const UserRegister = async (req, res, next) => {
       return next(error);
     }
 
-    const existingUser = await User.findOne({ email });
+    const normalizedEmail = email.trim().toLowerCase();
+
+    const existingUser = await User.findOne({ email: normalizedEmail });
     if (existingUser) {
       const error = new Error("Email already exists");
       error.statusCode = 400;
@@ -24,9 +26,9 @@ export const UserRegister = async (req, res, next) => {
     const hashedPassword = await bcrypt.hash(password, salt);
 
     await User.create({
-      fullName,
-      email,
-      mobileNumber,
+      fullName: fullName.trim(),
+      email: normalizedEmail,
+      mobileNumber: mobileNumber.trim(),
       password: hashedPassword,
       loginType: "normal_user",
     });
@@ -48,7 +50,9 @@ export const UserLogin = async (req, res, next) => {
       return next(error);
     }
 
-    const existingUser = await User.findOne({ email });
+    const normalizedEmail = email.trim().toLowerCase();
+
+    const existingUser = await User.findOne({ email: normalizedEmail });
     if (!existingUser) {
       const error = new Error("Email not registered");
       error.statusCode = 400;
@@ -61,6 +65,12 @@ export const UserLogin = async (req, res, next) => {
       return next(error);
     }
 
+    if (!existingUser.password) {
+      const error = new Error("Account has no password set. Please log in with Google");
+      error.statusCode = 400;
+      return next(error);
+    }
+
     const isPasswordMatch = await bcrypt.compare(password, existingUser.password);
     if (!isPasswordMatch) {
       const error = new Error("Password did not match");
@@ -68,7 +78,7 @@ export const UserLogin = async (req, res, next) => {
       return next(error);
     }
 
-    generateToken(existingUser._id, res);
+    const token = generateToken(existingUser._id, res);
 
     const userData = existingUser.toObject();
     delete userData.password;
@@ -76,6 +86,7 @@ export const UserLogin = async (req, res, next) => {
     res.status(200).json({
       message: "Login successful",
       data: userData,
+      token,
     });
   } catch (error) {
     next(error);
@@ -86,8 +97,9 @@ export const UserLogin = async (req, res, next) => {
 export const GoogleUserLogin = async (req, res, next) => {
   try {
     const { name, email, id, imageUrl } = req.body;
+    const normalizedEmail = email ? email.trim().toLowerCase() : "";
 
-    let existingUser = await User.findOne({ email });
+    let existingUser = await User.findOne({ email: normalizedEmail });
     const salt = await bcrypt.genSalt(10);
 
     if (existingUser && existingUser.loginType) {
@@ -97,22 +109,26 @@ export const GoogleUserLogin = async (req, res, next) => {
         if (imageUrl && !existingUser.profilePic) existingUser.profilePic = imageUrl;
         await existingUser.save();
       } else {
-        const isVerified = await bcrypt.compare(id, existingUser.google_id);
-        if (!isVerified) {
-          const error = new Error("User Not Verified");
-          error.statusCode = 400;
-          return next(error);
+        if (existingUser.google_id) {
+          const isVerified = await bcrypt.compare(id, existingUser.google_id);
+          if (!isVerified) {
+            const error = new Error("User Not Verified");
+            error.statusCode = 400;
+            return next(error);
+          }
+        } else {
+          existingUser.google_id = await bcrypt.hash(id, salt);
         }
         if (imageUrl && !existingUser.profilePic) {
           existingUser.profilePic = imageUrl;
-          await existingUser.save();
         }
+        await existingUser.save();
       }
     } else {
       const hashGoogleID = await bcrypt.hash(id, salt);
       const newUser = await User.create({
         fullName: name,
-        email,
+        email: normalizedEmail,
         google_id: hashGoogleID,
         profilePic: imageUrl || "",
         loginType: "google_user",
@@ -120,7 +136,7 @@ export const GoogleUserLogin = async (req, res, next) => {
       existingUser = newUser;
     }
 
-    generateToken(existingUser._id, res);
+    const token = generateToken(existingUser._id, res);
 
     const userData = existingUser.toObject();
     delete userData.password;
@@ -129,6 +145,7 @@ export const GoogleUserLogin = async (req, res, next) => {
     res.status(200).json({
       message: "Login successful",
       data: userData,
+      token,
     });
   } catch (error) {
     next(error);
@@ -138,11 +155,11 @@ export const GoogleUserLogin = async (req, res, next) => {
 // ================= LOGOUT =================
 export const UserLogout = async (req, res, next) => {
   try {
-    const isProd = process.env.NODE_ENV === "production";
+    const isProd = process.env.NODE_ENV === "production" || process.env.COOKIE_SECURE === "true";
     res.clearCookie("token", {
       httpOnly: true,
       secure: isProd,
-      sameSite: process.env.COOKIE_SAME_SITE || (isProd ? "none" : "lax"),
+      sameSite: isProd ? "none" : "lax",
     });
     res.status(200).json({ message: "Logged out successfully" });
   } catch (error) {
@@ -157,4 +174,4 @@ export const GetMe = async (req, res, next) => {
   } catch (error) {
     next(error);
   }
-};
+};

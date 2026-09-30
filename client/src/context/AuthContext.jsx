@@ -27,6 +27,7 @@ export const AuthProvider = ({ children }) => {
       } catch (err) {
         setUser(null);
         sessionStorage.removeItem("AppUser");
+        sessionStorage.removeItem("AppToken");
       } finally {
         setLoading(false);
       }
@@ -34,6 +35,7 @@ export const AuthProvider = ({ children }) => {
 
     checkAuthStatus();
   }, []);
+
 
   // Socket online presence management
   useEffect(() => {

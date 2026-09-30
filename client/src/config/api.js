@@ -8,4 +8,15 @@ const api = axios.create({
   withCredentials: true,
 });
 
-export default api;
+api.interceptors.request.use(
+  (config) => {
+    const token = sessionStorage.getItem("AppToken");
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
+
+export default api;

@@ -3,7 +3,12 @@ import User from "../models/userModel.js";
 
 export const Protect = async (req, res, next) => {
   try {
-    const token = req.cookies.token;
+    let token = req.cookies?.token;
+
+    if (!token && req.headers.authorization && req.headers.authorization.startsWith("Bearer ")) {
+      token = req.headers.authorization.split(" ")[1];
+    }
+
     if (!token) {
       const error = new Error("Unauthorized");
       error.statusCode = 401;
@@ -26,4 +31,4 @@ export const Protect = async (req, res, next) => {
     err.statusCode = 401;
     next(err);
   }
-};
+};
