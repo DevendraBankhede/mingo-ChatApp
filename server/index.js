@@ -65,9 +65,9 @@ app.use(
 );
 
 
-app.use(express.json({ limit: "10mb" }));
+app.use(express.json({ limit: "50mb" }));
 
-app.use(express.urlencoded({ extended: true }));
+app.use(express.urlencoded({ extended: true, limit: "50mb" }));
 
 app.use(cookieParser());
 
@@ -119,6 +119,7 @@ const httpServer = http.createServer(app);
 
 
 const io = new Server(httpServer, {
+  maxHttpBufferSize: 2e7, // 20 MB max payload for real-time images / media
   cors: {
     origin: allowedOrigins,
     credentials: true,

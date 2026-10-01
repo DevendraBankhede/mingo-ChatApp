@@ -302,33 +302,149 @@ const Chatting = ({ selectedFriend, currentUser, isOnline, onBack }) => {
     }
   };
 
-  // Upload and Send Message / Document
+  // Helper to process and optimize image for persistent instant sharing
+  const processImageForSharing = (file) => {
+    return new Promise((resolve) => {
+      const ext = (file.name.split(".").pop() || "").toLowerCase();
+      const isImg =
+        file.type.startsWith("image/") ||
+        ["jpg", "jpeg", "png", "webp", "gif", "svg", "bmp", "ico", "avif"].includes(ext);
+
+      if (!isImg) {
+        resolve(null);
+        return;
+      }
+
+      // For GIF or SVG or very small files, read as data URL directly to preserve animation/vector
+      if (ext === "gif" || ext === "svg" || file.type === "image/gif" || file.type === "image/svg+xml" || file.size < 200 * 1024) {
+        const reader = new FileReader();
+        reader.onload = (e) =>
+          resolve({
+            dataUrl: e.target.result,
+            fileName: file.name,
+            fileSize: file.size,
+            fileType: file.type || `image/${ext || "jpeg"}`,
+          });
+        reader.onerror = () => resolve(null);
+        reader.readAsDataURL(file);
+        return;
+      }
+
+      // Optimize image dimensions for smooth socket transfer and instant loading
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+          try {
+            const MAX_DIM = 1920;
+            let width = img.width;
+            let height = img.height;
+            if (width > MAX_DIM || height > MAX_DIM) {
+              if (width > height) {
+                height = Math.round((height * MAX_DIM) / width);
+                width = MAX_DIM;
+              } else {
+                width = Math.round((width * MAX_DIM) / height);
+                height = MAX_DIM;
+              }
+            }
+            const canvas = document.createElement("canvas");
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext("2d");
+            ctx.drawImage(img, 0, 0, width, height);
+
+            const mimeType = file.type === "image/png" ? "image/png" : "image/jpeg";
+            const quality = file.type === "image/png" ? undefined : 0.88;
+            const dataUrl = canvas.toDataURL(mimeType, quality);
+
+            resolve({
+              dataUrl,
+              fileName: file.name,
+              fileSize: Math.round((dataUrl.length * 3) / 4),
+              fileType: mimeType,
+            });
+          } catch (canvasErr) {
+            console.warn("Canvas optimization fallback:", canvasErr);
+            resolve({
+              dataUrl: e.target.result,
+              fileName: file.name,
+              fileSize: file.size,
+              fileType: file.type || "image/jpeg",
+            });
+          }
+        };
+        img.onerror = () => {
+          resolve({
+            dataUrl: e.target.result,
+            fileName: file.name,
+            fileSize: file.size,
+            fileType: file.type || "image/jpeg",
+          });
+        };
+        img.src = e.target.result;
+      };
+      reader.onerror = () => resolve(null);
+      reader.readAsDataURL(file);
+    });
+  };
+
+  // Upload and Send Message / Document / Photo
   const handleMessageSendSocket = async () => {
     const hasText = Boolean(message.trim());
     const hasFile = Boolean(selectedFile);
 
     if ((!hasText && !hasFile) || !receiver?._id) return;
 
-    let uploadedFileData = null;
+    let fileUrl = "";
+    let fileName = "";
+    let fileSize = 0;
+    let fileType = "";
+    let messageType = "text";
 
     if (hasFile) {
       setIsUploading(true);
       try {
-        const formData = new FormData();
-        formData.append("file", selectedFile);
+        const ext = (selectedFile.name.split(".").pop() || "").toLowerCase();
+        const isImage =
+          selectedFile.type.startsWith("image/") ||
+          ["jpg", "jpeg", "png", "webp", "gif", "svg", "bmp", "ico", "avif"].includes(ext);
 
-        const uploadRes = await api.post("/user/upload-document", formData, {
-          headers: { "Content-Type": "multipart/form-data" },
-        });
+        if (isImage) {
+          // Process image to high-quality Base64 Data URL for instant rendering and permanent storage
+          const imgData = await processImageForSharing(selectedFile);
+          if (imgData?.dataUrl) {
+            fileUrl = imgData.dataUrl;
+            fileName = imgData.fileName;
+            fileSize = imgData.fileSize;
+            fileType = imgData.fileType;
+            messageType = "image";
+          }
+        }
 
-        if (uploadRes.data?.data) {
-          uploadedFileData = uploadRes.data.data;
-        } else {
-          throw new Error("Failed to upload document");
+        // If not an image or if Base64 conversion was skipped, upload via FormData
+        if (!fileUrl) {
+          const formData = new FormData();
+          formData.append("file", selectedFile);
+
+          const uploadRes = await api.post("/user/upload-document", formData, {
+            headers: { "Content-Type": "multipart/form-data" },
+          });
+
+          if (uploadRes.data?.data) {
+            const data = uploadRes.data.data;
+            fileUrl = data.fileUrl;
+            fileName = data.fileName || selectedFile.name;
+            fileSize = data.fileSize || selectedFile.size;
+            fileType = data.fileType || selectedFile.type;
+            messageType = isImage ? "image" : "document";
+          } else {
+            throw new Error("Failed to upload document");
+          }
         }
       } catch (error) {
-        console.error("Document upload failed:", error);
-        toast.error(error.response?.data?.message || "Failed to upload document");
+        console.error("File processing/upload failed:", error);
+        toast.error(error.response?.data?.message || "Failed to process attached file");
         setIsUploading(false);
         return;
       }
@@ -337,21 +453,15 @@ const Chatting = ({ selectedFriend, currentUser, isOnline, onBack }) => {
     const currentMessageText = message.trim();
     const timeStamp = new Date().toISOString();
 
-    const isImageFile =
-      selectedFile?.type?.startsWith("image/") ||
-      ["jpg", "jpeg", "png", "gif", "webp", "svg", "bmp", "ico", "avif"].includes(
-        (selectedFile?.name?.split(".").pop() || "").toLowerCase()
-      );
-
     const payload = {
       senderID: user._id,
       receiverID: receiver._id,
       message: currentMessageText,
-      messageType: uploadedFileData ? (isImageFile ? "image" : "document") : "text",
-      fileUrl: uploadedFileData?.fileUrl || "",
-      fileName: uploadedFileData?.fileName || selectedFile?.name || "",
-      fileSize: uploadedFileData?.fileSize || selectedFile?.size || 0,
-      fileType: uploadedFileData?.fileType || selectedFile?.type || "",
+      messageType,
+      fileUrl,
+      fileName,
+      fileSize,
+      fileType,
     };
 
     try {
