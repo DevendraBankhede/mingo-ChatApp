@@ -23,6 +23,11 @@ const Chatting = ({ selectedFriend, currentUser, isOnline, onBack }) => {
   const [isUploading, setIsUploading] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
 
+  // Lightbox / Full Image Viewer state
+  const [activeImage, setActiveImage] = useState(null); // { url, fileName, fileSize, senderName, time }
+  const [zoomLevel, setZoomLevel] = useState(1);
+  const [rotation, setRotation] = useState(0);
+
   const handleProfileClick = () => {
     if (location.pathname === "/settings" || location.pathname === "/dashboard") {
       navigate("/chat");
@@ -65,18 +70,43 @@ const Chatting = ({ selectedFriend, currentUser, isOnline, onBack }) => {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + " " + sizes[i];
   };
 
-  // Helper to get backend base URL for downloads
+  // Helper to get backend base URL for downloads and image previews
   const getFullFileUrl = (url) => {
     if (!url) return "";
     if (url.startsWith("http://") || url.startsWith("https://")) return url;
-    const rawBaseUrl = import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
-    const serverOrigin = rawBaseUrl.replace(/\/api\/?$/, "");
+    if (url.startsWith("data:") || url.startsWith("blob:")) return url;
+    const rawBaseUrl =
+      import.meta.env.VITE_BACKEND_URL ||
+      (typeof window !== "undefined" && window.location.hostname === "localhost"
+        ? "http://localhost:4500"
+        : "https://mingo-chatapp.onrender.com");
+    const serverOrigin = rawBaseUrl.replace(/\/api\/?$/, "").replace(/\/+$/, "");
     return `${serverOrigin}${url.startsWith("/") ? "" : "/"}${url}`;
   };
 
   // Helper to get document info and styling
-  const getDocTypeInfo = (fileName = "", fileType = "") => {
-    const ext = (fileName.split(".").pop() || "").toLowerCase();
+  const getDocTypeInfo = (fileName = "", fileType = "", fileUrl = "", messageType = "") => {
+    const rawExt = (fileName.split(".").pop() || "").toLowerCase();
+    const urlExt = (String(fileUrl).split("?")[0].split(".").pop() || "").toLowerCase();
+    const ext = rawExt || urlExt;
+
+    const isImg =
+      ["jpg", "jpeg", "png", "gif", "webp", "svg", "bmp", "ico", "avif", "tiff"].includes(ext) ||
+      fileType?.startsWith("image/") ||
+      fileType === "image" ||
+      messageType === "image" ||
+      (typeof fileUrl === "string" && (fileUrl.startsWith("data:image/") || fileUrl.includes("/uploads/")));
+
+    if (isImg) {
+      return {
+        label: "Image",
+        ext: (ext || "IMG").toUpperCase(),
+        icon: "🖼️",
+        isImage: true,
+        colorClass: "bg-purple-500/15 text-purple-600 dark:text-purple-400 border-purple-500/30",
+        badgeClass: "badge-secondary",
+      };
+    }
 
     if (["pdf"].includes(ext) || fileType.includes("pdf")) {
       return {
@@ -123,16 +153,6 @@ const Chatting = ({ selectedFriend, currentUser, isOnline, onBack }) => {
         badgeClass: "badge-warning",
       };
     }
-    if (["jpg", "jpeg", "png", "gif", "webp", "svg"].includes(ext) || fileType.startsWith("image/")) {
-      return {
-        label: "Image",
-        ext: ext.toUpperCase() || "IMG",
-        icon: "🖼️",
-        isImage: true,
-        colorClass: "bg-purple-500/15 text-purple-600 dark:text-purple-400 border-purple-500/30",
-        badgeClass: "badge-secondary",
-      };
-    }
     if (["txt", "md", "json", "js", "jsx", "ts", "tsx", "html", "css", "py", "java", "c", "cpp"].includes(ext)) {
       return {
         label: "Code / Text",
@@ -151,6 +171,93 @@ const Chatting = ({ selectedFriend, currentUser, isOnline, onBack }) => {
       badgeClass: "badge-primary",
     };
   };
+
+  // Safe file download handler that works across origins
+  const handleDownload = async (url, fileName) => {
+    if (!url) return;
+    try {
+      toast.loading("Preparing download...", { id: "downloading" });
+      const response = await fetch(url, { mode: "cors" });
+      if (!response.ok) throw new Error("Network response was not ok");
+      const blob = await response.blob();
+      const blobUrl = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = blobUrl;
+      link.download = fileName || "download";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(blobUrl);
+      toast.success("Download started!", { id: "downloading" });
+    } catch (err) {
+      console.warn("Direct blob download failed, falling back to window open:", err);
+      // Fallback
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = fileName || "download";
+      link.target = "_blank";
+      link.rel = "noopener noreferrer";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      toast.dismiss("downloading");
+    }
+  };
+
+  // Open Lightbox Image Viewer
+  const openImageViewer = (chat, senderName) => {
+    const fullUrl = getFullFileUrl(chat.fileUrl);
+    setZoomLevel(1);
+    setRotation(0);
+    setActiveImage({
+      url: fullUrl,
+      fileName: chat.fileName || "Photo",
+      fileSize: chat.fileSize,
+      senderName: senderName || (chat.senderId === user?._id ? "You" : receiver?.fullName),
+      time: chat.createdAt,
+      chatId: chat._id,
+    });
+  };
+
+  // Navigate images in lightbox
+  const allImagesInChat = filteredChatData.filter((c) => {
+    const info = getDocTypeInfo(c.fileName, c.fileType, c.fileUrl, c.messageType);
+    return c.fileUrl && info?.isImage;
+  });
+
+  const currentImageIndex = allImagesInChat.findIndex(
+    (c) => c._id === activeImage?.chatId || getFullFileUrl(c.fileUrl) === activeImage?.url
+  );
+
+  const handleNextImage = () => {
+    if (currentImageIndex !== -1 && currentImageIndex < allImagesInChat.length - 1) {
+      const nextChat = allImagesInChat[currentImageIndex + 1];
+      openImageViewer(nextChat);
+    }
+  };
+
+  const handlePrevImage = () => {
+    if (currentImageIndex > 0) {
+      const prevChat = allImagesInChat[currentImageIndex - 1];
+      openImageViewer(prevChat);
+    }
+  };
+
+  // Close image viewer on Escape key, navigate with Left/Right
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (!activeImage) return;
+      if (e.key === "Escape") {
+        setActiveImage(null);
+      } else if (e.key === "ArrowRight") {
+        handleNextImage();
+      } else if (e.key === "ArrowLeft") {
+        handlePrevImage();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [activeImage, currentImageIndex, allImagesInChat]);
 
   // Handle File Input Selection
   const handleFileSelect = (e) => {
@@ -230,15 +337,21 @@ const Chatting = ({ selectedFriend, currentUser, isOnline, onBack }) => {
     const currentMessageText = message.trim();
     const timeStamp = new Date().toISOString();
 
+    const isImageFile =
+      selectedFile?.type?.startsWith("image/") ||
+      ["jpg", "jpeg", "png", "gif", "webp", "svg", "bmp", "ico", "avif"].includes(
+        (selectedFile?.name?.split(".").pop() || "").toLowerCase()
+      );
+
     const payload = {
       senderID: user._id,
       receiverID: receiver._id,
       message: currentMessageText,
-      messageType: uploadedFileData ? "document" : "text",
+      messageType: uploadedFileData ? (isImageFile ? "image" : "document") : "text",
       fileUrl: uploadedFileData?.fileUrl || "",
-      fileName: uploadedFileData?.fileName || "",
-      fileSize: uploadedFileData?.fileSize || 0,
-      fileType: uploadedFileData?.fileType || "",
+      fileName: uploadedFileData?.fileName || selectedFile?.name || "",
+      fileSize: uploadedFileData?.fileSize || selectedFile?.size || 0,
+      fileType: uploadedFileData?.fileType || selectedFile?.type || "",
     };
 
     try {
@@ -511,39 +624,55 @@ const Chatting = ({ selectedFriend, currentUser, isOnline, onBack }) => {
                       <div className="mb-2">
                         {/* Image Preview if it's an image file */}
                         {docInfo?.isImage ? (
-                          <div className="rounded-xl overflow-hidden border border-black/10 dark:border-white/10 mb-1.5 bg-base-200/50">
-                            <a
-                              href={fullFileUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              title="Click to view full image"
-                              className="block group relative"
+                          <div className="rounded-xl overflow-hidden border border-black/10 dark:border-white/10 mb-1.5 bg-base-200/50 shadow-2xs">
+                            <div
+                              onClick={() => openImageViewer(chat, isMe ? "You" : receiver?.fullName)}
+                              className="block group relative cursor-pointer overflow-hidden bg-black/5"
+                              title="Click to view full photo"
                             >
                               <img
                                 src={fullFileUrl}
-                                alt={chat.fileName || "Shared image"}
-                                className="max-h-64 w-full object-cover rounded-xl transition-transform group-hover:scale-102"
+                                alt={chat.fileName || "Shared photo"}
+                                className="max-h-72 w-full object-cover rounded-t-xl transition-all duration-300 group-hover:scale-103"
                                 loading="lazy"
+                                onError={(e) => {
+                                  e.target.onerror = null;
+                                  e.target.style.display = "none";
+                                  const fallback = e.target.nextSibling;
+                                  if (fallback) fallback.style.display = "flex";
+                                }}
                               />
-                              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100">
-                                <span className="badge badge-neutral text-xs shadow-md">
-                                  🔍 View Full
+                              <div
+                                style={{ display: "none" }}
+                                className="p-4 flex-col items-center justify-center text-center bg-base-300/40 text-base-content/70 rounded-t-xl min-h-[120px]"
+                              >
+                                <span className="text-2xl mb-1">🖼️</span>
+                                <span className="text-xs font-semibold">Click to open photo</span>
+                              </div>
+                              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-all flex items-center justify-center opacity-0 group-hover:opacity-100">
+                                <span className="btn btn-sm btn-neutral bg-black/75 backdrop-blur-md text-white border-0 shadow-lg text-xs gap-1.5 pointer-events-none transform group-hover:scale-105 transition-transform">
+                                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="size-4">
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607zM10.5 7.5v6m3-3h-6" />
+                                  </svg>
+                                  View Photo
                                 </span>
                               </div>
-                            </a>
-                            <div className="px-2.5 py-1.5 flex items-center justify-between text-[11px] bg-base-100/70 text-base-content backdrop-blur-xs">
-                              <span className="truncate max-w-[160px] font-medium">
-                                {chat.fileName || "Image"}
+                            </div>
+                            <div className="px-2.5 py-1.5 flex items-center justify-between text-[11px] bg-base-100/80 text-base-content backdrop-blur-xs border-t border-black/5 dark:border-white/5">
+                              <span className="truncate max-w-[150px] font-medium" title={chat.fileName || "Photo"}>
+                                {chat.fileName || "Photo"}
                               </span>
-                              <a
-                                href={fullFileUrl}
-                                download={chat.fileName || "download"}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="font-semibold text-primary hover:underline ml-2"
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleDownload(fullFileUrl, chat.fileName || "photo");
+                                }}
+                                className="font-semibold text-primary hover:underline flex items-center gap-1 cursor-pointer bg-transparent border-0 p-0 text-[11px]"
+                                title="Download photo"
                               >
                                 ⬇ Download
-                              </a>
+                              </button>
                             </div>
                           </div>
                         ) : (
@@ -594,11 +723,9 @@ const Chatting = ({ selectedFriend, currentUser, isOnline, onBack }) => {
                               </div>
                             </div>
 
-                            <a
-                              href={fullFileUrl}
-                              download={chat.fileName || "document"}
-                              target="_blank"
-                              rel="noopener noreferrer"
+                            <button
+                              type="button"
+                              onClick={() => handleDownload(fullFileUrl, chat.fileName || "document")}
                               className={`btn btn-circle btn-sm shrink-0 shadow-2xs ${
                                 isMe
                                   ? "btn-secondary text-secondary-content"
@@ -615,7 +742,7 @@ const Chatting = ({ selectedFriend, currentUser, isOnline, onBack }) => {
                                 <path d="M10.75 2.75a.75.75 0 00-1.5 0v8.614L6.295 8.235a.75.75 0 10-1.09 1.03l4.25 4.5a.75.75 0 001.09 0l4.25-4.5a.75.75 0 00-1.09-1.03l-2.955 3.129V2.75z" />
                                 <path d="M3.5 12.75a.75.75 0 00-1.5 0v2.5A2.75 2.75 0 004.75 18h10.5A2.75 2.75 0 0018 15.25v-2.5a.75.75 0 00-1.5 0v2.5c0 .69-.56 1.25-1.25 1.25H4.75c-.69 0-1.25-.56-1.25-1.25v-2.5z" />
                               </svg>
-                            </a>
+                            </button>
                           </div>
                         )}
                       </div>
@@ -682,7 +809,7 @@ const Chatting = ({ selectedFriend, currentUser, isOnline, onBack }) => {
           ref={fileInputRef}
           onChange={handleFileSelect}
           className="hidden"
-          accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv,.zip,.rar,.7z,.tar,.gz,.json,.md,.jpg,.jpeg,.png,.webp,.gif"
+          accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv,.zip,.rar,.7z,.tar,.gz,.json,.md,.jpg,.jpeg,.png,.webp,.gif,.bmp,.svg,.ico"
         />
 
         {/* Selected Document Staging Preview Banner */}
@@ -755,7 +882,7 @@ const Chatting = ({ selectedFriend, currentUser, isOnline, onBack }) => {
                 ? "btn-primary shadow-xs"
                 : "btn-ghost text-base-content/70 hover:text-primary hover:bg-base-200"
             }`}
-            title="Attach Document or File (PDF, Word, Excel, PPT, Zip, etc.)"
+            title="Attach Document or Photo (PDF, Images, Word, Excel, PPT, Zip, etc.)"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -779,8 +906,8 @@ const Chatting = ({ selectedFriend, currentUser, isOnline, onBack }) => {
             className="input input-bordered flex-1 text-sm focus:outline-none focus:border-primary rounded-xl"
             placeholder={
               selectedFile
-                ? "Add a caption for your document (optional)..."
-                : "Type a message or attach a document..."
+                ? "Add a caption for your photo or document (optional)..."
+                : "Type a message or attach a photo / document..."
             }
             onChange={(e) => setMessage(e.target.value)}
             value={message}
@@ -815,6 +942,148 @@ const Chatting = ({ selectedFriend, currentUser, isOnline, onBack }) => {
           </button>
         </div>
       </div>
+
+      {/* Full-Screen Image Lightbox / Viewer Modal */}
+      {activeImage && (
+        <div
+          className="fixed inset-0 z-50 bg-black/92 backdrop-blur-md flex flex-col justify-between animate-fadeIn select-none"
+          onClick={() => setActiveImage(null)}
+        >
+          {/* Lightbox Top Bar */}
+          <div
+            className="flex items-center justify-between px-4 sm:px-6 py-3.5 bg-gradient-to-b from-black/90 to-transparent z-10 shrink-0 text-white"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center gap-3 min-w-0">
+              <button
+                onClick={() => setActiveImage(null)}
+                className="btn btn-circle btn-sm btn-ghost text-white hover:bg-white/20 border-white/20"
+                title="Close (Esc)"
+              >
+                ✕
+              </button>
+              <div className="min-w-0">
+                <p className="font-bold text-sm truncate max-w-[180px] sm:max-w-md">
+                  {activeImage.fileName || "Photo"}
+                </p>
+                <p className="text-[11px] text-white/70">
+                  Shared by {activeImage.senderName}{" "}
+                  {activeImage.time ? `• ${formatTime(activeImage.time)}` : ""}{" "}
+                  {activeImage.fileSize ? `• ${formatFileSize(activeImage.fileSize)}` : ""}
+                </p>
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex items-center gap-1.5">
+              <button
+                onClick={() => setZoomLevel((z) => Math.max(0.5, +(z - 0.25).toFixed(2)))}
+                className="btn btn-circle btn-sm btn-ghost text-white hover:bg-white/20"
+                title="Zoom Out (-)"
+              >
+                -
+              </button>
+              <button
+                onClick={() => setZoomLevel(1)}
+                className="btn btn-xs btn-ghost text-white/90 hover:bg-white/20 px-2 font-mono text-[11px]"
+                title="Reset Zoom (100%)"
+              >
+                {Math.round(zoomLevel * 100)}%
+              </button>
+              <button
+                onClick={() => setZoomLevel((z) => Math.min(3, +(z + 0.25).toFixed(2)))}
+                className="btn btn-circle btn-sm btn-ghost text-white hover:bg-white/20"
+                title="Zoom In (+)"
+              >
+                +
+              </button>
+              <button
+                onClick={() => setRotation((r) => (r + 90) % 360)}
+                className="btn btn-circle btn-sm btn-ghost text-white hover:bg-white/20"
+                title="Rotate 90°"
+              >
+                🔄
+              </button>
+              <a
+                href={activeImage.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="btn btn-circle btn-sm btn-ghost text-white hover:bg-white/20"
+                title="Open in new tab"
+              >
+                ↗
+              </a>
+              <button
+                onClick={() => handleDownload(activeImage.url, activeImage.fileName)}
+                className="btn btn-sm btn-primary ml-1 gap-1 rounded-xl shadow-lg font-semibold text-xs"
+                title="Download full photo"
+              >
+                ⬇ Download
+              </button>
+            </div>
+          </div>
+
+          {/* Center Image Container with Navigation */}
+          <div className="relative flex-1 flex items-center justify-center p-4 overflow-hidden">
+            {/* Previous Photo Button */}
+            {allImagesInChat.length > 1 && currentImageIndex > 0 && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handlePrevImage();
+                }}
+                className="absolute left-4 top-1/2 -translate-y-1/2 z-20 btn btn-circle btn-md bg-black/60 hover:bg-black/90 text-white border-white/20 shadow-2xl transition-transform hover:scale-110"
+                title="Previous Photo (Left Arrow)"
+              >
+                ◀
+              </button>
+            )}
+
+            {/* Main Image View */}
+            <div
+              className="max-h-full max-w-full flex items-center justify-center transition-transform duration-200 ease-out"
+              style={{
+                transform: `scale(${zoomLevel}) rotate(${rotation}deg)`,
+              }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <img
+                src={activeImage.url}
+                alt={activeImage.fileName}
+                className="max-h-[76vh] max-w-[88vw] object-contain rounded-lg shadow-2xl border border-white/10"
+              />
+            </div>
+
+            {/* Next Photo Button */}
+            {allImagesInChat.length > 1 &&
+              currentImageIndex < allImagesInChat.length - 1 && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleNextImage();
+                  }}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 z-20 btn btn-circle btn-md bg-black/60 hover:bg-black/90 text-white border-white/20 shadow-2xl transition-transform hover:scale-110"
+                  title="Next Photo (Right Arrow)"
+                >
+                  ▶
+                </button>
+              )}
+          </div>
+
+          {/* Bottom Bar Info / Helper */}
+          <div
+            className="py-2.5 px-4 bg-gradient-to-t from-black/90 to-transparent flex items-center justify-center gap-4 text-xs text-white/70 shrink-0 z-10"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <span>Click photo or backdrop to close • Use Esc key or arrow keys</span>
+            {allImagesInChat.length > 1 && (
+              <span className="badge badge-neutral text-white bg-white/20 border-0">
+                {currentImageIndex + 1} of {allImagesInChat.length}
+              </span>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 };

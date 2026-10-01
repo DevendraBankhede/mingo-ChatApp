@@ -73,7 +73,16 @@ app.use(cookieParser());
 
 app.use(morgan("dev"));
 
-app.use("/uploads", express.static(uploadsDir));
+app.use(
+  "/uploads",
+  (req, res, next) => {
+    res.setHeader("Access-Control-Allow-Origin", "*");
+    res.setHeader("Cross-Origin-Resource-Policy", "cross-origin");
+    res.setHeader("Access-Control-Allow-Methods", "GET, HEAD, OPTIONS");
+    next();
+  },
+  express.static(uploadsDir)
+);
 
 
 app.use("/api/auth", AuthRouter);
