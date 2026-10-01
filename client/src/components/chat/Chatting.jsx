@@ -729,21 +729,22 @@ const Chatting = ({ selectedFriend, currentUser, isOnline, onBack }) => {
                       {isMe ? "You" : receiver?.fullName}
                     </p>
 
-                    {/* Document Card (if attached) */}
+                    {/* Photo / Document Card */}
                     {hasDocument && (
-                      <div className="mb-2">
-                        {/* Image Preview if it's an image file */}
+                      <div className="mb-1.5">
+                        {/* Modern Image Bubble */}
                         {docInfo?.isImage ? (
-                          <div className="rounded-xl overflow-hidden border border-black/10 dark:border-white/10 mb-1.5 bg-base-200/50 shadow-2xs">
+                          <div className="relative group/img overflow-hidden rounded-2xl border border-white/10 dark:border-white/10 shadow-lg bg-black/10 transition-all duration-300 hover:shadow-2xl hover:border-primary/40">
+                            {/* Photo Container with Click to Open Lightbox */}
                             <div
                               onClick={() => openImageViewer(chat, isMe ? "You" : receiver?.fullName)}
-                              className="block group relative cursor-pointer overflow-hidden bg-black/5"
-                              title="Click to view full photo"
+                              className="relative cursor-pointer overflow-hidden block"
+                              title="Click to expand full photo"
                             >
                               <img
                                 src={fullFileUrl}
                                 alt={chat.fileName || "Shared photo"}
-                                className="max-h-72 w-full object-cover rounded-t-xl transition-all duration-300 group-hover:scale-103"
+                                className="max-h-80 sm:max-h-96 w-full object-cover rounded-2xl transition-transform duration-500 ease-out group-hover/img:scale-104"
                                 loading="lazy"
                                 onError={(e) => {
                                   e.target.onerror = null;
@@ -752,57 +753,76 @@ const Chatting = ({ selectedFriend, currentUser, isOnline, onBack }) => {
                                   if (fallback) fallback.style.display = "flex";
                                 }}
                               />
+                              
+                              {/* Error Fallback */}
                               <div
                                 style={{ display: "none" }}
-                                className="p-4 flex-col items-center justify-center text-center bg-base-300/40 text-base-content/70 rounded-t-xl min-h-[120px]"
+                                className="p-6 flex-col items-center justify-center text-center bg-base-300/60 text-base-content/70 rounded-2xl min-h-[140px]"
                               >
-                                <span className="text-2xl mb-1">🖼️</span>
+                                <span className="text-3xl mb-1">🖼️</span>
                                 <span className="text-xs font-semibold">Click to open photo</span>
                               </div>
-                              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-all flex items-center justify-center opacity-0 group-hover:opacity-100">
-                                <span className="btn btn-sm btn-neutral bg-black/75 backdrop-blur-md text-white border-0 shadow-lg text-xs gap-1.5 pointer-events-none transform group-hover:scale-105 transition-transform">
-                                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="size-4">
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607zM10.5 7.5v6m3-3h-6" />
-                                  </svg>
-                                  View Photo
-                                </span>
+
+                              {/* Subtle Bottom Dark Vignette Overlay for Text Legibility */}
+                              <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-black/70 via-black/30 to-transparent pointer-events-none" />
+
+                              {/* Floating Hover Action Dock (Zoom, Download, Copy) */}
+                              <div className="absolute inset-0 bg-black/25 opacity-0 group-hover/img:opacity-100 transition-all duration-200 flex items-center justify-center gap-2 backdrop-blur-[2px] p-3">
+                                <button
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    openImageViewer(chat, isMe ? "You" : receiver?.fullName);
+                                  }}
+                                  className="btn btn-circle btn-sm bg-black/70 hover:bg-primary text-white border-white/20 shadow-xl backdrop-blur-md hover:scale-110 transition-transform"
+                                  title="Expand full screen"
+                                >
+                                  🔍
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleDownload(fullFileUrl, chat.fileName || "photo");
+                                  }}
+                                  className="btn btn-circle btn-sm bg-black/70 hover:bg-primary text-white border-white/20 shadow-xl backdrop-blur-md hover:scale-110 transition-transform"
+                                  title="Download high-res"
+                                >
+                                  ⬇
+                                </button>
                               </div>
-                            </div>
-                            <div className="px-2.5 py-1.5 flex items-center justify-between text-[11px] bg-base-100/80 text-base-content backdrop-blur-xs border-t border-black/5 dark:border-white/5">
-                              <span className="truncate max-w-[150px] font-medium" title={chat.fileName || "Photo"}>
-                                {chat.fileName || "Photo"}
-                              </span>
-                              <button
-                                type="button"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleDownload(fullFileUrl, chat.fileName || "photo");
-                                }}
-                                className="font-semibold text-primary hover:underline flex items-center gap-1 cursor-pointer bg-transparent border-0 p-0 text-[11px]"
-                                title="Download photo"
-                              >
-                                ⬇ Download
-                              </button>
+
+                              {/* Inset Photo Badge (File Name & Size) */}
+                              <div className="absolute bottom-2 left-2.5 right-2.5 flex items-center justify-between text-white drop-shadow-md pointer-events-none">
+                                <span className="text-[11px] font-medium truncate max-w-[170px] bg-black/40 backdrop-blur-md px-2 py-0.5 rounded-md border border-white/10">
+                                  📷 {chat.fileName || "Photo"}
+                                </span>
+                                {chat.fileSize ? (
+                                  <span className="text-[10px] bg-black/40 backdrop-blur-md px-1.5 py-0.5 rounded-md border border-white/10 text-white/80">
+                                    {formatFileSize(chat.fileSize)}
+                                  </span>
+                                ) : null}
+                              </div>
                             </div>
                           </div>
                         ) : (
-                          /* Document Card representation */
+                          /* Modern Document Card */
                           <div
-                            className={`flex items-center gap-3 p-2.5 rounded-xl border transition-all ${
+                            className={`flex items-center gap-3 p-3 rounded-2xl border transition-all duration-200 ${
                               isMe
-                                ? "bg-black/15 border-white/20 text-primary-content hover:bg-black/25"
-                                : "bg-base-200/70 border-base-300 text-base-content hover:bg-base-200"
+                                ? "bg-black/20 border-white/25 text-primary-content hover:bg-black/30"
+                                : "bg-base-200/80 border-base-300 text-base-content hover:bg-base-200 shadow-xs"
                             }`}
                           >
                             <div
-                              className={`size-11 rounded-lg flex flex-col items-center justify-center shrink-0 border font-bold ${
+                              className={`size-12 rounded-xl flex flex-col items-center justify-center shrink-0 border shadow-xs font-bold ${
                                 isMe
                                   ? "bg-white/20 text-primary-content border-white/30"
                                   : docInfo?.colorClass
                               }`}
                             >
-                              <span className="text-lg leading-none">{docInfo?.icon}</span>
-                              <span className="text-[9px] uppercase tracking-wider font-extrabold mt-0.5">
+                              <span className="text-xl leading-none">{docInfo?.icon}</span>
+                              <span className="text-[9px] uppercase tracking-wider font-extrabold mt-1">
                                 {docInfo?.ext}
                               </span>
                             </div>
@@ -816,16 +836,16 @@ const Chatting = ({ selectedFriend, currentUser, isOnline, onBack }) => {
                               </p>
                               <div className="flex items-center gap-2 mt-1">
                                 <span
-                                  className={`text-[10px] font-medium opacity-80 ${
-                                    isMe ? "text-primary-content/80" : "text-base-content/60"
+                                  className={`text-[10px] font-medium opacity-85 ${
+                                    isMe ? "text-primary-content/85" : "text-base-content/70"
                                   }`}
                                 >
                                   {formatFileSize(chat.fileSize)}
                                 </span>
                                 <span className="opacity-40">•</span>
                                 <span
-                                  className={`text-[10px] font-medium opacity-80 ${
-                                    isMe ? "text-primary-content/80" : "text-base-content/60"
+                                  className={`text-[10px] font-medium opacity-85 ${
+                                    isMe ? "text-primary-content/85" : "text-base-content/70"
                                   }`}
                                 >
                                   {docInfo?.label}
@@ -836,10 +856,10 @@ const Chatting = ({ selectedFriend, currentUser, isOnline, onBack }) => {
                             <button
                               type="button"
                               onClick={() => handleDownload(fullFileUrl, chat.fileName || "document")}
-                              className={`btn btn-circle btn-sm shrink-0 shadow-2xs ${
+                              className={`btn btn-circle btn-sm shrink-0 shadow-sm transition-transform hover:scale-105 ${
                                 isMe
-                                  ? "btn-secondary text-secondary-content"
-                                  : "btn-primary text-primary-content"
+                                  ? "btn-secondary text-secondary-content border-0"
+                                  : "btn-primary text-primary-content border-0"
                               }`}
                               title={`Download ${chat.fileName}`}
                             >
