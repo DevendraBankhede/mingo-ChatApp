@@ -713,25 +713,31 @@ const Chatting = ({ selectedFriend, currentUser, isOnline, onBack }) => {
 
                   {/* Chat Box Container */}
                   <div
-                    className={`w-fit max-w-[85%] sm:max-w-[65%] md:max-w-[55%] p-3 rounded-2xl shadow-xs border text-xs sm:text-sm transition-all ${
+                    className={`w-fit max-w-[88%] sm:max-w-[70%] md:max-w-[60%] transition-all duration-300 ${
+                      docInfo?.isImage && !chat.message
+                        ? "p-1 rounded-3xl overflow-hidden shadow-md"
+                        : "p-3 rounded-2xl shadow-xs"
+                    } ${
                       isMe
-                        ? "bg-primary text-primary-content border-primary/30 rounded-br-xs"
-                        : "bg-base-100 text-base-content border-base-300/80 rounded-bl-xs"
+                        ? "bg-primary text-primary-content border border-primary/40 rounded-br-xs"
+                        : "bg-base-100 text-base-content border border-base-300/80 rounded-bl-xs"
                     }`}
                   >
-                    <p
-                      className={`text-[10px] font-bold mb-1 ${
-                        isMe
-                          ? "text-primary-content/80 text-right"
-                          : "text-primary text-left"
-                      }`}
-                    >
-                      {isMe ? "You" : receiver?.fullName}
-                    </p>
+                    {(!docInfo?.isImage || chat.message) && (
+                      <p
+                        className={`text-[10px] font-bold mb-1 ${
+                          isMe
+                            ? "text-primary-content/80 text-right"
+                            : "text-primary text-left"
+                        }`}
+                      >
+                        {isMe ? "You" : receiver?.fullName}
+                      </p>
+                    )}
 
                     {/* Photo / Document Card */}
                     {hasDocument && (
-                      <div className="mb-1.5">
+                      <div className="mb-1">
                         {/* Modern Image Bubble */}
                         {docInfo?.isImage ? (
                           <div className="relative group/img overflow-hidden rounded-2xl border border-white/10 dark:border-white/10 shadow-lg bg-black/10 transition-all duration-300 hover:shadow-2xl hover:border-primary/40">
@@ -764,18 +770,18 @@ const Chatting = ({ selectedFriend, currentUser, isOnline, onBack }) => {
                               </div>
 
                               {/* Subtle Bottom Dark Vignette Overlay for Text Legibility */}
-                              <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-black/70 via-black/30 to-transparent pointer-events-none" />
+                              <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-black/75 via-black/30 to-transparent pointer-events-none" />
 
                               {/* Floating Hover Action Dock (Zoom, Download, Copy) */}
-                              <div className="absolute inset-0 bg-black/25 opacity-0 group-hover/img:opacity-100 transition-all duration-200 flex items-center justify-center gap-2 backdrop-blur-[2px] p-3">
+                              <div className="absolute inset-0 bg-black/25 opacity-0 group-hover/img:opacity-100 transition-all duration-200 flex items-center justify-center gap-2.5 backdrop-blur-[2px] p-3">
                                 <button
                                   type="button"
                                   onClick={(e) => {
                                     e.stopPropagation();
                                     openImageViewer(chat, isMe ? "You" : receiver?.fullName);
                                   }}
-                                  className="btn btn-circle btn-sm bg-black/70 hover:bg-primary text-white border-white/20 shadow-xl backdrop-blur-md hover:scale-110 transition-transform"
-                                  title="Expand full screen"
+                                  className="btn btn-circle btn-sm bg-black/75 hover:bg-primary text-white border-white/20 shadow-xl backdrop-blur-md hover:scale-110 transition-transform"
+                                  title="Expand full screen (Lightbox)"
                                 >
                                   🔍
                                 </button>
@@ -785,23 +791,30 @@ const Chatting = ({ selectedFriend, currentUser, isOnline, onBack }) => {
                                     e.stopPropagation();
                                     handleDownload(fullFileUrl, chat.fileName || "photo");
                                   }}
-                                  className="btn btn-circle btn-sm bg-black/70 hover:bg-primary text-white border-white/20 shadow-xl backdrop-blur-md hover:scale-110 transition-transform"
+                                  className="btn btn-circle btn-sm bg-black/75 hover:bg-primary text-white border-white/20 shadow-xl backdrop-blur-md hover:scale-110 transition-transform"
                                   title="Download high-res"
                                 >
                                   ⬇
                                 </button>
                               </div>
 
-                              {/* Inset Photo Badge (File Name & Size) */}
+                              {/* Inset Photo Badge (File Name, Size & Delivery Status) */}
                               <div className="absolute bottom-2 left-2.5 right-2.5 flex items-center justify-between text-white drop-shadow-md pointer-events-none">
-                                <span className="text-[11px] font-medium truncate max-w-[170px] bg-black/40 backdrop-blur-md px-2 py-0.5 rounded-md border border-white/10">
+                                <span className="text-[11px] font-medium truncate max-w-[160px] bg-black/45 backdrop-blur-md px-2 py-0.5 rounded-lg border border-white/15">
                                   📷 {chat.fileName || "Photo"}
                                 </span>
-                                {chat.fileSize ? (
-                                  <span className="text-[10px] bg-black/40 backdrop-blur-md px-1.5 py-0.5 rounded-md border border-white/10 text-white/80">
-                                    {formatFileSize(chat.fileSize)}
-                                  </span>
-                                ) : null}
+                                <div className="flex items-center gap-1.5">
+                                  {chat.fileSize ? (
+                                    <span className="text-[10px] bg-black/45 backdrop-blur-md px-1.5 py-0.5 rounded-lg border border-white/15 text-white/90">
+                                      {formatFileSize(chat.fileSize)}
+                                    </span>
+                                  ) : null}
+                                  {!chat.message && (
+                                    <span className="text-[9px] bg-black/45 backdrop-blur-md px-1.5 py-0.5 rounded-lg border border-white/15 text-white/90 font-mono">
+                                      {formatTime(chat.createdAt)} {isMe && "✓✓"}
+                                    </span>
+                                  )}
+                                </div>
                               </div>
                             </div>
                           </div>
@@ -880,22 +893,24 @@ const Chatting = ({ selectedFriend, currentUser, isOnline, onBack }) => {
 
                     {/* Text Message Content (if any) */}
                     {chat.message && (
-                      <p className="leading-relaxed whitespace-pre-wrap break-words font-medium">
+                      <p className="leading-relaxed whitespace-pre-wrap break-words font-medium px-1">
                         {chat.message}
                       </p>
                     )}
 
-                    {/* Footer Time & Status */}
-                    <div
-                      className={`flex items-center gap-1 text-[9px] mt-1 ${
-                        isMe
-                          ? "justify-end text-primary-content/75"
-                          : "justify-start text-base-content/40"
-                      }`}
-                    >
-                      <span>{formatTime(chat.createdAt)}</span>
-                      {isMe && <span className="font-bold text-[9px]">✓✓</span>}
-                    </div>
+                    {/* Footer Time & Status (shown when there is text or document) */}
+                    {(chat.message || !docInfo?.isImage) && (
+                      <div
+                        className={`flex items-center gap-1 text-[9px] mt-1 px-1 ${
+                          isMe
+                            ? "justify-end text-primary-content/75"
+                            : "justify-start text-base-content/40"
+                        }`}
+                      >
+                        <span>{formatTime(chat.createdAt)}</span>
+                        {isMe && <span className="font-bold text-[9px]">✓✓</span>}
+                      </div>
+                    )}
                   </div>
 
                   {/* Right Avatar */}
@@ -942,24 +957,39 @@ const Chatting = ({ selectedFriend, currentUser, isOnline, onBack }) => {
           accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv,.zip,.rar,.7z,.tar,.gz,.json,.md,.jpg,.jpeg,.png,.webp,.gif,.bmp,.svg,.ico"
         />
 
-        {/* Selected Document Staging Preview Banner */}
+        {/* Selected Document / Photo Staging Preview Banner */}
         {selectedFile && (
-          <div className="mb-2 max-w-4xl mx-auto p-2.5 bg-base-200/90 rounded-xl border border-base-300 flex items-center justify-between shadow-xs animate-fadeIn">
+          <div className="mb-2.5 max-w-4xl mx-auto p-2.5 bg-base-100/95 backdrop-blur-md rounded-2xl border border-primary/25 flex items-center justify-between shadow-lg animate-fadeIn">
             <div className="flex items-center gap-3 min-w-0">
-              <div
-                className={`size-9 rounded-lg flex items-center justify-center text-base border shrink-0 ${
-                  getDocTypeInfo(selectedFile.name, selectedFile.type).colorClass
-                }`}
-              >
-                {getDocTypeInfo(selectedFile.name, selectedFile.type).icon}
-              </div>
+              {selectedFile.type?.startsWith("image/") ||
+              ["jpg", "jpeg", "png", "webp", "gif"].includes(
+                (selectedFile.name.split(".").pop() || "").toLowerCase()
+              ) ? (
+                <div className="size-11 rounded-xl overflow-hidden ring-1 ring-primary/30 shrink-0 bg-base-300">
+                  <img
+                    src={URL.createObjectURL(selectedFile)}
+                    alt="Preview"
+                    className="size-full object-cover"
+                  />
+                </div>
+              ) : (
+                <div
+                  className={`size-11 rounded-xl flex items-center justify-center text-lg border shrink-0 ${
+                    getDocTypeInfo(selectedFile.name, selectedFile.type).colorClass
+                  }`}
+                >
+                  {getDocTypeInfo(selectedFile.name, selectedFile.type).icon}
+                </div>
+              )}
               <div className="min-w-0">
                 <p className="text-xs font-bold text-base-content truncate max-w-xs sm:max-w-md">
                   {selectedFile.name}
                 </p>
-                <p className="text-[10px] text-base-content/60">
+                <p className="text-[10px] text-base-content/70">
                   {formatFileSize(selectedFile.size)} •{" "}
-                  {getDocTypeInfo(selectedFile.name, selectedFile.type).label}
+                  {selectedFile.type?.startsWith("image/")
+                    ? "Photo Attachment"
+                    : getDocTypeInfo(selectedFile.name, selectedFile.type).label}
                 </p>
               </div>
             </div>
@@ -967,7 +997,7 @@ const Chatting = ({ selectedFriend, currentUser, isOnline, onBack }) => {
               type="button"
               onClick={() => setSelectedFile(null)}
               disabled={isUploading}
-              className="btn btn-ghost btn-circle btn-xs text-base-content/60 hover:text-error"
+              className="btn btn-ghost btn-circle btn-sm text-base-content/60 hover:text-error hover:bg-error/10"
               title="Remove attachment"
             >
               ✕
