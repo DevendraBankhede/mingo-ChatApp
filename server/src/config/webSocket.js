@@ -132,6 +132,44 @@ const WebSocket = (io) => {
         console.error("Error handling socket send message:", error);
       }
     });
+
+    // Handle real-time message / photo deletion
+    socket.on("deleteMessage", async (payload) => {
+      try {
+        console.log("Delete Message request received via socket:", payload);
+        const { messageId, senderId, receiverId } = payload || {};
+        if (!messageId) return;
+
+        // Delete from database if not already removed by REST endpoint
+        await Message.findByIdAndDelete(messageId);
+
+        // Notify receiver sockets
+        if (receiverId) {
+          const receiverIdStr = String(receiverId);
+          const receiverSockets = userSockets.get(receiverIdStr);
+          if (receiverSockets && receiverSockets.size > 0) {
+            console.log(`Broadcasting messageDeleted to receiver ${receiverIdStr}`);
+            for (const socketId of receiverSockets) {
+              io.to(socketId).emit("messageDeleted", { messageId });
+            }
+          }
+        }
+
+        // Notify sender sockets (for all tabs/devices of sender)
+        if (senderId) {
+          const senderIdStr = String(senderId);
+          const senderSockets = userSockets.get(senderIdStr);
+          if (senderSockets && senderSockets.size > 0) {
+            console.log(`Broadcasting messageDeleted to sender ${senderIdStr}`);
+            for (const socketId of senderSockets) {
+              io.to(socketId).emit("messageDeleted", { messageId });
+            }
+          }
+        }
+      } catch (error) {
+        console.error("Error handling socket deleteMessage:", error);
+      }
+    });
   });
 };
 

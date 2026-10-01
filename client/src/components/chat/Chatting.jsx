@@ -24,9 +24,13 @@ const Chatting = ({ selectedFriend, currentUser, isOnline, onBack }) => {
   const [isDragging, setIsDragging] = useState(false);
 
   // Lightbox / Full Image Viewer state
-  const [activeImage, setActiveImage] = useState(null); // { url, fileName, fileSize, senderName, time }
+  const [activeImage, setActiveImage] = useState(null); // { url, fileName, fileSize, senderName, time, chatId, isMe, chat }
   const [zoomLevel, setZoomLevel] = useState(1);
   const [rotation, setRotation] = useState(0);
+
+  // Photo Deletion state
+  const [photoToDelete, setPhotoToDelete] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const handleProfileClick = () => {
     if (location.pathname === "/settings" || location.pathname === "/dashboard") {
@@ -207,16 +211,64 @@ const Chatting = ({ selectedFriend, currentUser, isOnline, onBack }) => {
   // Open Lightbox Image Viewer
   const openImageViewer = (chat, senderName) => {
     const fullUrl = getFullFileUrl(chat.fileUrl);
+    const myIdStr = user?._id ? String(user._id) : user?.id ? String(user.id) : "";
+    const senderIdStr = getSenderIdStr(chat.senderId);
+    const isMe = Boolean(senderIdStr && myIdStr && senderIdStr === myIdStr);
+
     setZoomLevel(1);
     setRotation(0);
     setActiveImage({
       url: fullUrl,
       fileName: chat.fileName || "Photo",
       fileSize: chat.fileSize,
-      senderName: senderName || (chat.senderId === user?._id ? "You" : receiver?.fullName),
+      senderName: senderName || (isMe ? "You" : receiver?.fullName),
       time: chat.createdAt,
       chatId: chat._id,
+      _id: chat._id,
+      isMe,
+      chat,
     });
+  };
+
+  // Handle Photo Deletion
+  const handleConfirmDeletePhoto = async () => {
+    if (!photoToDelete?._id) return;
+    const targetId = String(photoToDelete._id);
+    setIsDeleting(true);
+
+    try {
+      // 1. Call REST API for server-side MongoDB & disk deletion
+      await api.delete(`/user/delete-message/${targetId}`);
+
+      // 2. Broadcast via Socket.IO for real-time removal on receiver's end
+      socketAPI.emit("deleteMessage", {
+        messageId: targetId,
+        senderId: user?._id || user?.id,
+        receiverId: selectedFriend?._id || selectedFriend?.id,
+      });
+
+      // 3. Update local state immediately
+      setFilteredChatData((prev) =>
+        prev.filter((m) => String(m._id) !== targetId)
+      );
+
+      // 4. If image is open in Lightbox, close it
+      if (
+        activeImage &&
+        (String(activeImage.chatId) === targetId ||
+          String(activeImage._id) === targetId)
+      ) {
+        setActiveImage(null);
+      }
+
+      toast.success("Photo deleted successfully");
+      setPhotoToDelete(null);
+    } catch (err) {
+      console.error("Failed to delete photo:", err);
+      toast.error(err?.response?.data?.message || "Failed to delete photo");
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   // Navigate images in lightbox
@@ -519,12 +571,31 @@ const Chatting = ({ selectedFriend, currentUser, isOnline, onBack }) => {
       }
     };
 
+    const handleMessageDeleted = ({ messageId }) => {
+      if (!messageId) return;
+      const idStr = String(messageId);
+      setFilteredChatData((prev) => prev.filter((m) => String(m._id) !== idStr));
+
+      setActiveImage((current) => {
+        if (
+          current &&
+          (String(current.chatId) === idStr || String(current._id) === idStr)
+        ) {
+          toast("A photo was deleted by the sender", { icon: "🗑️" });
+          return null;
+        }
+        return current;
+      });
+    };
+
     if (selectedFriend) {
       socketAPI.on("receive", handleReceiveMessage);
+      socketAPI.on("messageDeleted", handleMessageDeleted);
     }
 
     return () => {
       socketAPI.off("receive", handleReceiveMessage);
+      socketAPI.off("messageDeleted", handleMessageDeleted);
     };
   }, [selectedFriend]);
 
@@ -772,8 +843,23 @@ const Chatting = ({ selectedFriend, currentUser, isOnline, onBack }) => {
                               {/* Subtle Bottom Dark Vignette Overlay for Text Legibility */}
                               <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-black/75 via-black/30 to-transparent pointer-events-none" />
 
-                              {/* Floating Hover Action Dock (Zoom, Download, Copy) */}
-                              <div className="absolute inset-0 bg-black/25 opacity-0 group-hover/img:opacity-100 transition-all duration-200 flex items-center justify-center gap-2.5 backdrop-blur-[2px] p-3">
+                              {/* Mobile / Direct Delete Button for Sender */}
+                              {isMe && (
+                                <button
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setPhotoToDelete(chat);
+                                  }}
+                                  className="absolute top-2 right-2 size-7 rounded-full bg-black/60 hover:bg-error text-white flex items-center justify-center text-xs backdrop-blur-md shadow-md border border-white/20 transition-all z-20 hover:scale-110"
+                                  title="Delete Photo"
+                                >
+                                  🗑️
+                                </button>
+                              )}
+
+                              {/* Floating Hover Action Dock (Zoom, Download, Delete) */}
+                              <div className="absolute inset-0 bg-black/25 opacity-0 group-hover/img:opacity-100 transition-all duration-200 flex items-center justify-center gap-2.5 backdrop-blur-[2px] p-3 z-10">
                                 <button
                                   type="button"
                                   onClick={(e) => {
@@ -796,6 +882,19 @@ const Chatting = ({ selectedFriend, currentUser, isOnline, onBack }) => {
                                 >
                                   ⬇
                                 </button>
+                                {isMe && (
+                                  <button
+                                    type="button"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setPhotoToDelete(chat);
+                                    }}
+                                    className="btn btn-circle btn-sm bg-error/85 hover:bg-error text-white border-white/20 shadow-xl backdrop-blur-md hover:scale-110 transition-transform"
+                                    title="Delete Photo"
+                                  >
+                                    🗑️
+                                  </button>
+                                )}
                               </div>
 
                               {/* Inset Photo Badge (File Name, Size & Delivery Status) */}
@@ -1180,6 +1279,24 @@ const Chatting = ({ selectedFriend, currentUser, isOnline, onBack }) => {
                 <span>⬇</span>
                 <span className="hidden sm:inline">Download</span>
               </button>
+              {activeImage?.isMe && (
+                <button
+                  onClick={() => {
+                    const chatItem =
+                      filteredChatData.find(
+                        (c) =>
+                          String(c._id) ===
+                          String(activeImage.chatId || activeImage._id)
+                      ) || activeImage;
+                    setPhotoToDelete(chatItem);
+                  }}
+                  className="btn btn-xs sm:btn-sm btn-error ml-0.5 sm:ml-1 gap-1 rounded-xl shadow-lg font-semibold text-[11px] sm:text-xs px-2 sm:px-3 text-white"
+                  title="Delete this photo"
+                >
+                  <span>🗑️</span>
+                  <span className="hidden sm:inline">Delete</span>
+                </button>
+              )}
             </div>
           </div>
 
@@ -1241,6 +1358,82 @@ const Chatting = ({ selectedFriend, currentUser, isOnline, onBack }) => {
                 {currentImageIndex + 1} of {allImagesInChat.length}
               </span>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* Delete Photo Confirmation Modal */}
+      {photoToDelete && (
+        <div
+          className="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4 animate-fadeIn select-none"
+          onClick={() => !isDeleting && setPhotoToDelete(null)}
+        >
+          <div
+            className="card bg-base-100 text-base-content border border-base-300 shadow-2xl rounded-3xl max-w-sm w-full overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="card-body p-5 sm:p-6 space-y-4">
+              {/* Header with Icon */}
+              <div className="flex items-center gap-3">
+                <div className="size-11 rounded-2xl bg-error/15 text-error flex items-center justify-center text-xl font-bold shrink-0">
+                  🗑️
+                </div>
+                <div>
+                  <h3 className="font-extrabold text-base text-base-content leading-tight">
+                    Delete Photo?
+                  </h3>
+                  <p className="text-[11px] text-base-content/60 mt-0.5">
+                    This action will remove the photo for everyone.
+                  </p>
+                </div>
+              </div>
+
+              {/* Photo Thumbnail Preview */}
+              {photoToDelete.fileUrl && (
+                <div className="relative rounded-2xl overflow-hidden border border-base-300 max-h-40 bg-black/5 flex items-center justify-center">
+                  <img
+                    src={getFullFileUrl(photoToDelete.fileUrl)}
+                    alt="Photo to delete"
+                    className="max-h-36 w-full object-cover"
+                  />
+                  <div className="absolute bottom-1.5 left-2 right-2 bg-black/60 backdrop-blur-xs text-white text-[10px] px-2 py-0.5 rounded-md truncate font-medium">
+                    📷 {photoToDelete.fileName || "Photo attachment"}
+                  </div>
+                </div>
+              )}
+
+              <p className="text-xs text-base-content/75 leading-relaxed">
+                Are you sure you want to delete this photo? It will disappear for both you and{" "}
+                <strong className="text-base-content font-bold">
+                  {receiver?.fullName || "your contact"}
+                </strong>{" "}
+                in real time.
+              </p>
+
+              {/* Action Buttons */}
+              <div className="flex items-center gap-2 pt-1">
+                <button
+                  type="button"
+                  disabled={isDeleting}
+                  onClick={() => setPhotoToDelete(null)}
+                  className="btn btn-ghost flex-1 rounded-xl font-semibold text-xs theme-nav-btn"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  disabled={isDeleting}
+                  onClick={handleConfirmDeletePhoto}
+                  className="btn btn-error flex-1 rounded-xl font-bold text-xs text-white shadow-md shadow-error/20"
+                >
+                  {isDeleting ? (
+                    <span className="loading loading-spinner loading-xs" />
+                  ) : (
+                    "Delete Photo"
+                  )}
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}

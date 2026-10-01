@@ -4,6 +4,7 @@ import {
   SendMessage,
   GetMessages,
   UploadDocument,
+  DeleteMessage,
 } from "../controllers/messageController.js";
 import { Protect } from "../middleware/authMiddleware.js";
 import { upload } from "../middleware/uploadMiddleware.js";
@@ -17,5 +18,6 @@ router.put("/profile", Protect, updateProfile);
 router.post("/upload-document", Protect, upload.single("file"), UploadDocument);
 router.post("/send-message", Protect, SendMessage);
 router.get("/get-messages/:friendId", Protect, GetMessages);
+router.delete("/delete-message/:messageId", Protect, DeleteMessage);
 
 export default router;
