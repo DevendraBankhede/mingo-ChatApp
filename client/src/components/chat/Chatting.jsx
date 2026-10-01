@@ -590,20 +590,20 @@ const Chatting = ({ selectedFriend, currentUser, isOnline, onBack }) => {
       )}
 
       {/* Top Navigation Header */}
-      <div className="flex items-center justify-between px-4 sm:px-6 py-3.5 bg-base-100/90 backdrop-blur-md border-b border-base-300 shadow-2xs z-10 shrink-0">
-        <div className="flex items-center gap-3">
+      <div className="flex items-center justify-between px-3 sm:px-6 py-2.5 sm:py-3.5 bg-base-100/90 backdrop-blur-md border-b border-base-300 shadow-2xs z-10 shrink-0">
+        <div className="flex items-center gap-2 sm:gap-3 min-w-0">
           {onBack && (
             <button
               onClick={onBack}
-              className="btn btn-ghost btn-circle btn-sm md:hidden text-base-content/70 hover:text-base-content"
+              className="btn btn-ghost btn-circle btn-xs sm:btn-sm md:hidden text-base-content/70 hover:text-base-content shrink-0"
               title="Back to contacts"
             >
               ←
             </button>
           )}
 
-          <div className="avatar">
-            <div className="size-11 rounded-full bg-gradient-to-tr from-primary via-accent to-secondary text-primary-content font-bold text-base flex items-center justify-center overflow-hidden ring-2 ring-primary/20 shadow-2xs">
+          <div className="avatar shrink-0">
+            <div className="size-9 sm:size-11 rounded-full bg-gradient-to-tr from-primary via-accent to-secondary text-primary-content font-bold text-xs sm:text-base flex items-center justify-center overflow-hidden ring-2 ring-primary/20 shadow-2xs">
               {receiver?.profilePic ? (
                 <img
                   src={receiver.profilePic}
@@ -615,17 +615,17 @@ const Chatting = ({ selectedFriend, currentUser, isOnline, onBack }) => {
               )}
             </div>
           </div>
-          <div>
-            <h3 className="font-bold text-base text-base-content leading-tight">
+          <div className="min-w-0">
+            <h3 className="font-bold text-xs sm:text-base text-base-content leading-tight truncate max-w-[130px] sm:max-w-xs md:max-w-md">
               {receiver?.fullName || "Select a friend"}
             </h3>
             <p
-              className={`text-xs font-medium flex items-center gap-1.5 mt-0.5 ${
+              className={`text-[10px] sm:text-xs font-medium flex items-center gap-1.5 mt-0.5 ${
                 isOnline ? "text-success" : "text-base-content/40"
               }`}
             >
               <span
-                className={`size-2 rounded-full ${
+                className={`size-1.5 sm:size-2 rounded-full ${
                   isOnline ? "bg-success animate-pulse" : "bg-base-content/30"
                 }`}
               />
@@ -634,9 +634,9 @@ const Chatting = ({ selectedFriend, currentUser, isOnline, onBack }) => {
           </div>
         </div>
 
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-1 shrink-0">
           <button
-            className="btn btn-ghost btn-circle btn-sm text-base-content/60 hover:text-primary transition-colors"
+            className="btn btn-ghost btn-circle btn-xs sm:btn-sm text-base-content/60 hover:text-primary transition-colors"
             title="Audio Call"
           >
             📞
@@ -1111,55 +1111,54 @@ const Chatting = ({ selectedFriend, currentUser, isOnline, onBack }) => {
         >
           {/* Lightbox Top Bar */}
           <div
-            className="flex items-center justify-between px-4 sm:px-6 py-3.5 bg-gradient-to-b from-black/90 to-transparent z-10 shrink-0 text-white"
+            className="flex items-center justify-between px-3 sm:px-6 py-2.5 sm:py-3.5 bg-gradient-to-b from-black/90 to-transparent z-10 shrink-0 text-white"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-center gap-3 min-w-0">
+            <div className="flex items-center gap-2 sm:gap-3 min-w-0">
               <button
                 onClick={() => setActiveImage(null)}
-                className="btn btn-circle btn-sm btn-ghost text-white hover:bg-white/20 border-white/20"
+                className="btn btn-circle btn-xs sm:btn-sm btn-ghost text-white hover:bg-white/20 border-white/20 shrink-0"
                 title="Close (Esc)"
               >
                 ✕
               </button>
               <div className="min-w-0">
-                <p className="font-bold text-sm truncate max-w-[180px] sm:max-w-md">
+                <p className="font-bold text-xs sm:text-sm truncate max-w-[120px] sm:max-w-md">
                   {activeImage.fileName || "Photo"}
                 </p>
-                <p className="text-[11px] text-white/70">
-                  Shared by {activeImage.senderName}{" "}
-                  {activeImage.time ? `• ${formatTime(activeImage.time)}` : ""}{" "}
-                  {activeImage.fileSize ? `• ${formatFileSize(activeImage.fileSize)}` : ""}
+                <p className="text-[10px] sm:text-[11px] text-white/70 truncate max-w-[140px] sm:max-w-none">
+                  {activeImage.senderName}{" "}
+                  {activeImage.time ? `• ${formatTime(activeImage.time)}` : ""}
                 </p>
               </div>
             </div>
 
             {/* Action Buttons */}
-            <div className="flex items-center gap-1.5">
+            <div className="flex items-center gap-1 sm:gap-1.5 shrink-0">
               <button
                 onClick={() => setZoomLevel((z) => Math.max(0.5, +(z - 0.25).toFixed(2)))}
-                className="btn btn-circle btn-sm btn-ghost text-white hover:bg-white/20"
+                className="btn btn-circle btn-xs sm:btn-sm btn-ghost text-white hover:bg-white/20 hidden sm:flex"
                 title="Zoom Out (-)"
               >
                 -
               </button>
               <button
                 onClick={() => setZoomLevel(1)}
-                className="btn btn-xs btn-ghost text-white/90 hover:bg-white/20 px-2 font-mono text-[11px]"
+                className="btn btn-xs btn-ghost text-white/90 hover:bg-white/20 px-1.5 font-mono text-[10px] sm:text-[11px] hidden sm:flex"
                 title="Reset Zoom (100%)"
               >
                 {Math.round(zoomLevel * 100)}%
               </button>
               <button
                 onClick={() => setZoomLevel((z) => Math.min(3, +(z + 0.25).toFixed(2)))}
-                className="btn btn-circle btn-sm btn-ghost text-white hover:bg-white/20"
+                className="btn btn-circle btn-xs sm:btn-sm btn-ghost text-white hover:bg-white/20 hidden sm:flex"
                 title="Zoom In (+)"
               >
                 +
               </button>
               <button
                 onClick={() => setRotation((r) => (r + 90) % 360)}
-                className="btn btn-circle btn-sm btn-ghost text-white hover:bg-white/20"
+                className="btn btn-circle btn-xs sm:btn-sm btn-ghost text-white hover:bg-white/20"
                 title="Rotate 90°"
               >
                 🔄
@@ -1168,17 +1167,18 @@ const Chatting = ({ selectedFriend, currentUser, isOnline, onBack }) => {
                 href={activeImage.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="btn btn-circle btn-sm btn-ghost text-white hover:bg-white/20"
+                className="btn btn-circle btn-xs sm:btn-sm btn-ghost text-white hover:bg-white/20 hidden sm:flex"
                 title="Open in new tab"
               >
                 ↗
               </a>
               <button
                 onClick={() => handleDownload(activeImage.url, activeImage.fileName)}
-                className="btn btn-sm btn-primary ml-1 gap-1 rounded-xl shadow-lg font-semibold text-xs"
+                className="btn btn-xs sm:btn-sm btn-primary ml-0.5 sm:ml-1 gap-1 rounded-xl shadow-lg font-semibold text-[11px] sm:text-xs px-2 sm:px-3"
                 title="Download full photo"
               >
-                ⬇ Download
+                <span>⬇</span>
+                <span className="hidden sm:inline">Download</span>
               </button>
             </div>
           </div>

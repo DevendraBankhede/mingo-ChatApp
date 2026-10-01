@@ -120,7 +120,7 @@ const Home = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.1 }}
-            className="text-4xl sm:text-6xl md:text-7xl font-extrabold tracking-tight leading-[1.1]"
+            className="text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold tracking-tight leading-[1.15]"
           >
             Lightning-Fast Messaging,{" "}
             <span className="bg-gradient-to-r from-primary via-accent to-secondary bg-clip-text text-transparent">
@@ -133,7 +133,7 @@ const Home = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.2 }}
-            className="text-base sm:text-xl text-base-content/70 max-w-2xl mx-auto font-normal leading-relaxed"
+            className="text-sm sm:text-lg md:text-xl text-base-content/70 max-w-2xl mx-auto font-normal leading-relaxed px-2"
           >
             Mingo redefines communication with seamless design, unparalleled WebSocket speed,
             encrypted auth, and instant high-res photo sharing.
@@ -144,12 +144,12 @@ const Home = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.3 }}
-            className="flex flex-wrap items-center justify-center gap-4 pt-2"
+            className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 pt-2 w-full max-w-md mx-auto sm:max-w-none"
           >
             {isLogin ? (
               <button
                 onClick={() => navigate("/chat")}
-                className="btn btn-primary btn-lg rounded-2xl px-8 font-bold shadow-xl shadow-primary/25 hover:scale-105 transition-transform"
+                className="btn btn-primary btn-md sm:btn-lg rounded-2xl px-6 sm:px-8 font-bold shadow-xl shadow-primary/25 hover:scale-105 transition-transform w-full sm:w-auto"
               >
                 <span>💬</span> Open Chat App
               </button>
@@ -157,13 +157,13 @@ const Home = () => {
               <>
                 <button
                   onClick={() => navigate("/register")}
-                  className="btn btn-primary btn-lg rounded-2xl px-8 font-bold shadow-xl shadow-primary/25 hover:scale-105 transition-transform"
+                  className="btn btn-primary btn-md sm:btn-lg rounded-2xl px-6 sm:px-8 font-bold shadow-xl shadow-primary/25 hover:scale-105 transition-transform w-full sm:w-auto"
                 >
                   Get Started Free
                 </button>
                 <button
                   onClick={() => navigate("/login")}
-                  className="btn btn-outline btn-lg rounded-2xl px-8 font-semibold hover:bg-base-200"
+                  className="btn btn-outline btn-md sm:btn-lg rounded-2xl px-6 sm:px-8 font-semibold hover:bg-base-200 w-full sm:w-auto"
                 >
                   Sign In
                 </button>
@@ -450,8 +450,8 @@ const Home = () => {
               },
               {
                 icon: "🎨",
-                title: "8 Handcrafted Themes",
-                desc: "Switch between modern Dark, Light, Cyberpunk, Spotify, and Claude color palettes on the fly.",
+                title: "Curated Themes",
+                desc: "Seamlessly switch between crisp White, sleek Dark, and OLED Black modes on the fly.",
                 badge: "Styling",
               },
               {

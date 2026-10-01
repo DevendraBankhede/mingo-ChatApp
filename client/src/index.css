@@ -6,10 +6,13 @@
 @import "flyonui/variants.css";
 @source "../node_modules/flyonui/flyonui.js";
 
+html,
 body {
   font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+  min-width: 320px;
 }
 
 /* Custom Sleek Scrollbars */
@@ -64,4 +67,43 @@ body {
 
 .animate-float {
   animation: float 4s ease-in-out infinite;
+}
+
+/* Theme Contrast Utilities for White, Dark & Black */
+.theme-nav-btn {
+  background-color: transparent !important;
+  border-color: transparent !important;
+}
+
+[data-theme="light"] .theme-nav-btn,
+[data-theme="light"] .btn-ghost {
+  color: #0f172a !important;
+  background-color: transparent !important;
+}
+[data-theme="light"] .theme-nav-btn:hover,
+[data-theme="light"] .btn-ghost:hover {
+  background-color: rgba(0, 0, 0, 0.06) !important;
+  color: #000000 !important;
+}
+
+[data-theme="dark"] .theme-nav-btn,
+[data-theme="dark"] .btn-ghost {
+  color: #f8fafc !important;
+  background-color: transparent !important;
+}
+[data-theme="dark"] .theme-nav-btn:hover,
+[data-theme="dark"] .btn-ghost:hover {
+  background-color: rgba(255, 255, 255, 0.1) !important;
+  color: #ffffff !important;
+}
+
+[data-theme="black"] .theme-nav-btn,
+[data-theme="black"] .btn-ghost {
+  color: #ffffff !important;
+  background-color: transparent !important;
+}
+[data-theme="black"] .theme-nav-btn:hover,
+[data-theme="black"] .btn-ghost:hover {
+  background-color: rgba(255, 255, 255, 0.15) !important;
+  color: #ffffff !important;
 }

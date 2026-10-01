@@ -59,10 +59,10 @@ const Chat = () => {
   return (
     <>
       {isLogin && (
-        <div className="flex h-[calc(100vh-64px)] overflow-hidden">
+        <div className="flex h-[calc(100dvh-56px)] sm:h-[calc(100dvh-64px)] w-full overflow-hidden">
           {/* Sidebar */}
           <div
-            className={`w-full md:w-80 shrink-0 bg-base-100 border-r border-base-300 flex-col ${
+            className={`w-full md:w-80 lg:w-88 shrink-0 bg-base-100 border-r border-base-300 flex-col h-full overflow-hidden ${
               selectedFriend ? "hidden md:flex" : "flex"
             }`}
           >
