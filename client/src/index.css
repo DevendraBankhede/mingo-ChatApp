@@ -37,8 +37,7 @@ body {
 }
 
 [data-theme="dark"] .glass-panel,
-[data-theme="black"] .glass-panel,
-[data-theme="spotify"] .glass-panel {
+[data-theme="black"] .glass-panel {
   background: rgba(20, 24, 33, 0.75);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);

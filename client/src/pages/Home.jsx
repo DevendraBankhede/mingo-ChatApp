@@ -1,432 +1,609 @@
-import React from "react";
-import { motion } from "motion/react";
+import React, { useState } from "react";
+import { motion, AnimatePresence } from "motion/react";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 
 const Home = () => {
   const navigate = useNavigate();
+  const { isLogin } = useAuth();
+
+  // Interactive Live Chat Demo State
+  const [activeDemoContact, setActiveDemoContact] = useState(0);
+  const [demoInput, setDemoInput] = useState("");
+  const [demoMessages, setDemoMessages] = useState([
+    {
+      id: 1,
+      sender: "Alice",
+      isMe: false,
+      text: "Hey there! Have you tried the new photo sharing on Mingo? ⚡",
+      time: "10:42 AM",
+    },
+    {
+      id: 2,
+      sender: "You",
+      isMe: true,
+      text: "Yes! The photos open instantly in the lightbox with full zoom and zero lag! 🚀",
+      time: "10:43 AM",
+    },
+    {
+      id: 3,
+      sender: "Alice",
+      isMe: false,
+      isImage: true,
+      imageSrc:
+        "https://images.unsplash.com/photo-1506744038136-46273834b3fb?w=800&auto=format&fit=crop&q=80",
+      fileName: "mountain_sunset.jpg",
+      fileSize: "1.4 MB",
+      caption: "Check out this view from my hike today! 🏔️✨",
+      time: "10:44 AM",
+    },
+  ]);
+
+  const demoContacts = [
+    {
+      id: 0,
+      name: "Alice Vance",
+      avatar: "👩‍💼",
+      status: "Online",
+      unread: 0,
+      lastMsg: "Check out this view from my hike...",
+    },
+    {
+      id: 1,
+      name: "Alex Rivera",
+      avatar: "👨‍💻",
+      status: "Online",
+      unread: 2,
+      lastMsg: "Let's test the new WebSocket stream!",
+    },
+    {
+      id: 2,
+      name: "Sarah Miller",
+      avatar: "🎨",
+      status: "Offline",
+      unread: 0,
+      lastMsg: "Theme switcher looks amazing 🔥",
+    },
+  ];
+
+  const handleSendDemoMessage = (e) => {
+    e.preventDefault();
+    if (!demoInput.trim()) return;
+
+    const newMsg = {
+      id: Date.now(),
+      sender: "You",
+      isMe: true,
+      text: demoInput.trim(),
+      time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+    };
+
+    setDemoMessages((prev) => [...prev, newMsg]);
+    setDemoInput("");
+
+    // Simulate auto-reply from active contact
+    setTimeout(() => {
+      setDemoMessages((prev) => [
+        ...prev,
+        {
+          id: Date.now() + 1,
+          sender: demoContacts[activeDemoContact].name.split(" ")[0],
+          isMe: false,
+          text: "Love how fast messages sync in real time! ✨💯",
+          time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+        },
+      ]);
+    }, 1200);
+  };
 
   return (
-    <div className="bg-base-200/60 overflow-x-hidden">
-      {/* ORIGINAL TOP SECTION */}
-      <div className="min-h-[calc(100vh-64px)] flex flex-col items-center justify-center px-4 py-16 text-center relative overflow-hidden">
-        {/* Background Decorative Ambient Glows */}
-        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 size-96 bg-primary/15 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute bottom-1/4 left-1/3 size-80 bg-accent/15 rounded-full blur-3xl pointer-events-none" />
+    <div className="bg-base-100 text-base-content min-h-screen overflow-x-hidden selection:bg-primary/20 selection:text-primary">
+      {/* HERO SECTION (Design 3 - Telegram & Notion Minimalist SaaS Style) */}
+      <section className="relative pt-16 pb-20 px-4 sm:px-6 lg:px-8 overflow-hidden">
+        {/* Ambient Top Glow Orbs */}
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-7xl h-[450px] bg-gradient-to-b from-primary/15 via-accent/10 to-transparent blur-3xl pointer-events-none -z-10" />
 
-        {/* Hero Header */}
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, ease: "easeOut" }}
-          className="mb-8 max-w-2xl mx-auto z-10"
-        >
-          <span className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-primary/10 text-primary font-semibold text-xs mb-6 border border-primary/20 shadow-2xs animate-float">
-            <span>⚡</span>
-            <span>Powered by Real-Time WebSockets</span>
-          </span>
-
-          <h1 className="text-4xl sm:text-6xl font-extrabold tracking-tight text-base-content leading-tight">
-            Connect instantly with{" "}
-            <span className="bg-gradient-to-r from-primary via-accent to-secondary bg-clip-text text-transparent">
-              Mingo
-            </span>
-          </h1>
-          <p className="text-base-content/65 mt-4 text-base sm:text-xl max-w-lg mx-auto font-medium">
-            Experience seamless real-time messaging, encrypted authentication, and customized themes for frictionless team communication.
-          </p>
-        </motion.div>
-
-        {/* CTA Buttons */}
-        <motion.div
-          className="flex flex-wrap gap-4 justify-center mb-16 z-10"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.2, ease: "easeOut" }}
-        >
-          <button
-            className="btn btn-primary btn-md sm:btn-lg shadow-lg shadow-primary/20 hover:shadow-primary/40 font-bold px-8 rounded-xl hover:scale-105 transition-all"
-            onClick={() => navigate("/register")}
-          >
-            Get Started Free
-          </button>
-          <button
-            className="btn btn-outline btn-md sm:btn-lg font-bold px-8 rounded-xl hover:bg-base-100/60"
-            onClick={() => navigate("/contact")}
-          >
-            Contact Us
-          </button>
-        </motion.div>
-
-        {/* Feature Cards */}
-        <motion.div
-          className="grid grid-cols-1 sm:grid-cols-3 gap-6 max-w-4xl w-full z-10"
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.4 }}
-        >
-          {[
-            {
-              icon: "⚡",
-              title: "Instant Real-Time",
-              desc: "Zero delay message delivery powered by bi-directional WebSocket channels.",
-              badge: "Fast",
-            },
-            {
-              icon: "🔒",
-              title: "Secure Authentication",
-              desc: "Protected using JWT cookies and verified Google OAuth authentication.",
-              badge: "Encrypted",
-            },
-            {
-              icon: "🎨",
-              title: "Multi-Theme Experience",
-              desc: "Switch between 8 handcrafted themes including Spotify, Claude, and Dark mode.",
-              badge: "Customizable",
-            },
-          ].map(({ icon, title, desc, badge }) => (
-            <div
-              key={title}
-              className="card bg-base-100/90 backdrop-blur-md shadow-lg border border-base-300/50 p-6 text-left hover:-translate-y-1.5 hover:shadow-xl transition-all group"
-            >
-              <div className="flex items-center justify-between mb-4">
-                <div className="size-12 rounded-xl bg-primary/10 text-primary flex items-center justify-center text-2xl group-hover:scale-110 transition-transform">
-                  {icon}
-                </div>
-                <span className="badge badge-primary/10 text-primary text-[11px] font-semibold">
-                  {badge}
-                </span>
-              </div>
-              <h3 className="font-bold text-lg text-base-content leading-snug">{title}</h3>
-              <p className="text-base-content/60 text-xs sm:text-sm mt-2 leading-relaxed">{desc}</p>
-            </div>
-          ))}
-        </motion.div>
-      </div>
-
-      {/* SINGLE ADDITIONAL SECTION BELOW (Animated on Scroll) */}
-      <section className="py-24 px-4 bg-base-100/80 backdrop-blur-md border-t border-base-300/60 relative overflow-hidden">
-        {/* Ambient background glow for the bottom section */}
-        <div className="absolute top-1/2 left-1/4 -translate-y-1/2 size-80 bg-primary/10 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute bottom-10 right-1/4 size-80 bg-secondary/10 rounded-full blur-3xl pointer-events-none" />
-
-        <div className="max-w-5xl mx-auto space-y-14 text-center relative z-10">
-
-          {/* Section Header with Scroll Animation */}
+        <div className="max-w-5xl mx-auto text-center space-y-8">
+          {/* Top Pill Badge */}
           <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: "-60px" }}
-            transition={{ duration: 0.6, ease: "easeOut" }}
-            className="max-w-2xl mx-auto space-y-3"
+            initial={{ opacity: 0, y: -15 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 text-primary border border-primary/20 font-semibold text-xs shadow-xs"
           >
-            <span className="badge badge-primary font-bold text-xs px-3.5 py-2 rounded-full shadow-sm">
-              ✨ Experience Mingo
-            </span>
-            <h2 className="text-3xl sm:text-5xl font-extrabold tracking-tight text-base-content">
-              Simple, Powerful & Connected
-            </h2>
-            <p className="text-base-content/70 text-sm sm:text-base font-medium">
-              See how easy it is to set up your account and start communicating in seconds.
-            </p>
+            <span className="size-2 rounded-full bg-primary animate-pulse" />
+            <span>A New Standard for Modern Conversations</span>
           </motion.div>
 
-          {/* 3 Step Process Cards with Staggered Scroll Animations */}
+          {/* Main Headline */}
+          <motion.h1
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.1 }}
+            className="text-4xl sm:text-6xl md:text-7xl font-extrabold tracking-tight leading-[1.1]"
+          >
+            Lightning-Fast Messaging,{" "}
+            <span className="bg-gradient-to-r from-primary via-accent to-secondary bg-clip-text text-transparent">
+              Zero Friction.
+            </span>
+          </motion.h1>
+
+          {/* Subtitle */}
+          <motion.p
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+            className="text-base sm:text-xl text-base-content/70 max-w-2xl mx-auto font-normal leading-relaxed"
+          >
+            Mingo redefines communication with seamless design, unparalleled WebSocket speed,
+            encrypted auth, and instant high-res photo sharing.
+          </motion.p>
+
+          {/* CTA Button Group */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.3 }}
+            className="flex flex-wrap items-center justify-center gap-4 pt-2"
+          >
+            {isLogin ? (
+              <button
+                onClick={() => navigate("/chat")}
+                className="btn btn-primary btn-lg rounded-2xl px-8 font-bold shadow-xl shadow-primary/25 hover:scale-105 transition-transform"
+              >
+                <span>💬</span> Open Chat App
+              </button>
+            ) : (
+              <>
+                <button
+                  onClick={() => navigate("/register")}
+                  className="btn btn-primary btn-lg rounded-2xl px-8 font-bold shadow-xl shadow-primary/25 hover:scale-105 transition-transform"
+                >
+                  Get Started Free
+                </button>
+                <button
+                  onClick={() => navigate("/login")}
+                  className="btn btn-outline btn-lg rounded-2xl px-8 font-semibold hover:bg-base-200"
+                >
+                  Sign In
+                </button>
+              </>
+            )}
+          </motion.div>
+
+          {/* Metrics / Social Proof Ticker */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.7, delay: 0.45 }}
+            className="pt-8 grid grid-cols-2 sm:grid-cols-4 gap-4 max-w-3xl mx-auto border-t border-base-200 text-center"
+          >
+            {[
+              { label: "Delivery Latency", value: "< 15ms" },
+              { label: "Socket Reliability", value: "99.9%" },
+              { label: "End-to-End Auth", value: "JWT + OAuth" },
+              { label: "Free Forever", value: "100%" },
+            ].map(({ label, value }) => (
+              <div key={label} className="p-2">
+                <p className="text-xl sm:text-2xl font-black text-base-content">{value}</p>
+                <p className="text-[11px] text-base-content/60 font-medium">{label}</p>
+              </div>
+            ))}
+          </motion.div>
+        </div>
+
+        {/* INTERACTIVE LIVE CHATROOM SHOWCASE (Design 3 Centerpiece) */}
+        <motion.div
+          initial={{ opacity: 0, y: 40 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, delay: 0.4, ease: "easeOut" }}
+          className="max-w-4xl mx-auto mt-14"
+        >
+          {/* Main Desktop Container Frame */}
+          <div className="card bg-base-200/90 backdrop-blur-2xl border border-base-300 shadow-2xl rounded-3xl overflow-hidden ring-1 ring-white/10">
+            {/* Top Mac/App Window Bar */}
+            <div className="px-5 py-3 bg-base-300/60 border-b border-base-300 flex items-center justify-between text-xs text-base-content/60">
+              <div className="flex items-center gap-2">
+                <span className="size-3 rounded-full bg-error/80" />
+                <span className="size-3 rounded-full bg-warning/80" />
+                <span className="size-3 rounded-full bg-success/80" />
+                <span className="ml-2 font-mono text-[11px] font-semibold text-base-content/70 hidden sm:inline">
+                  mingo-chat-preview.app
+                </span>
+              </div>
+              <div className="badge badge-success/15 text-success border-success/30 font-bold text-[10px] gap-1">
+                <span className="size-1.5 rounded-full bg-success animate-ping" />
+                Live WebSocket Channel
+              </div>
+            </div>
+
+            {/* Split Screen Workspace: Sidebar + Chat Room */}
+            <div className="grid grid-cols-1 md:grid-cols-12 min-h-[460px]">
+              {/* Left Contacts Sidebar (4 cols on desktop) */}
+              <div className="hidden md:block md:col-span-4 border-r border-base-300/80 bg-base-100/60 p-3.5 space-y-2">
+                <div className="flex items-center justify-between px-2 py-1 mb-2">
+                  <span className="font-extrabold text-xs uppercase tracking-wider text-base-content/60">
+                    Contacts
+                  </span>
+                  <span className="badge badge-primary badge-xs">3 Online</span>
+                </div>
+
+                {demoContacts.map((contact) => (
+                  <button
+                    key={contact.id}
+                    onClick={() => setActiveDemoContact(contact.id)}
+                    className={`w-full flex items-center gap-3 p-2.5 rounded-2xl transition-all text-left ${
+                      activeDemoContact === contact.id
+                        ? "bg-primary text-primary-content shadow-sm"
+                        : "hover:bg-base-200/80 text-base-content"
+                    }`}
+                  >
+                    <div className="relative">
+                      <div className="size-10 rounded-full bg-base-300 flex items-center justify-center text-lg shadow-2xs">
+                        {contact.avatar}
+                      </div>
+                      {contact.status === "Online" && (
+                        <span className="absolute bottom-0 right-0 size-2.5 bg-success rounded-full ring-2 ring-base-100" />
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between">
+                        <p className="font-bold text-xs truncate">{contact.name}</p>
+                        {contact.unread > 0 && (
+                          <span className="badge badge-secondary badge-xs font-bold">
+                            {contact.unread}
+                          </span>
+                        )}
+                      </div>
+                      <p
+                        className={`text-[10px] truncate ${
+                          activeDemoContact === contact.id
+                            ? "text-primary-content/80"
+                            : "text-base-content/60"
+                        }`}
+                      >
+                        {contact.lastMsg}
+                      </p>
+                    </div>
+                  </button>
+                ))}
+
+                <div className="pt-4 px-2">
+                  <div className="p-3 rounded-2xl bg-base-200/60 border border-base-300/60 text-center space-y-1">
+                    <p className="text-[11px] font-bold text-base-content">Interactive Preview</p>
+                    <p className="text-[9px] text-base-content/60">Type a test message below to chat!</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Right Chat Stream (8 cols on desktop) */}
+              <div className="col-span-1 md:col-span-8 flex flex-col bg-base-100/40">
+                {/* Chat Top Header */}
+                <div className="px-4 py-3 bg-base-200/40 border-b border-base-300/80 flex items-center justify-between shrink-0">
+                  <div className="flex items-center gap-2.5">
+                    <div className="size-9 rounded-full bg-gradient-to-tr from-primary to-accent text-primary-content flex items-center justify-center text-base shadow-xs">
+                      {demoContacts[activeDemoContact].avatar}
+                    </div>
+                    <div>
+                      <h4 className="font-bold text-xs sm:text-sm text-base-content leading-tight">
+                        {demoContacts[activeDemoContact].name}
+                      </h4>
+                      <p className="text-[10px] text-success font-medium flex items-center gap-1">
+                        <span className="size-1.5 rounded-full bg-success inline-block animate-pulse" />
+                        Online
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-1">
+                    <button className="btn btn-ghost btn-circle btn-xs text-base-content/60">
+                      📞
+                    </button>
+                    <button className="btn btn-ghost btn-circle btn-xs text-base-content/60">
+                      📹
+                    </button>
+                  </div>
+                </div>
+
+                {/* Messages Scroll Area */}
+                <div className="flex-1 p-4 space-y-3 overflow-y-auto max-h-[320px]">
+                  <AnimatePresence initial={false}>
+                    {demoMessages.map((msg) => (
+                      <motion.div
+                        key={msg.id}
+                        initial={{ opacity: 0, y: 10, scale: 0.96 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        transition={{ duration: 0.3 }}
+                        className={`flex flex-col ${msg.isMe ? "items-end" : "items-start"}`}
+                      >
+                        {msg.isImage ? (
+                          /* Modern Glassmorphic Photo Bubble (Design 1 in Chat Showcase) */
+                          <div
+                            className={`relative rounded-3xl overflow-hidden border p-1 shadow-lg max-w-[85%] sm:max-w-[70%] ${
+                              msg.isMe
+                                ? "bg-primary border-primary/30"
+                                : "bg-base-200 border-base-300"
+                            }`}
+                          >
+                            <div className="relative rounded-2xl overflow-hidden">
+                              <img
+                                src={msg.imageSrc}
+                                alt={msg.fileName}
+                                className="h-44 w-full object-cover rounded-2xl"
+                              />
+                              <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-transparent to-transparent pointer-events-none" />
+                              <div className="absolute bottom-2 left-2.5 right-2.5 flex items-center justify-between text-white text-[10px]">
+                                <span className="bg-black/40 backdrop-blur-md px-2 py-0.5 rounded-md border border-white/10 font-medium">
+                                  📷 {msg.fileName}
+                                </span>
+                                <span className="bg-black/40 backdrop-blur-md px-1.5 py-0.5 rounded-md border border-white/10">
+                                  {msg.time} {msg.isMe && "✓✓"}
+                                </span>
+                              </div>
+                            </div>
+                            {msg.caption && (
+                              <p
+                                className={`text-xs px-2.5 py-2 font-medium ${
+                                  msg.isMe ? "text-primary-content" : "text-base-content"
+                                }`}
+                              >
+                                {msg.caption}
+                              </p>
+                            )}
+                          </div>
+                        ) : (
+                          /* Text Message Bubble */
+                          <div
+                            className={`p-3 rounded-2xl max-w-[85%] sm:max-w-[70%] shadow-xs text-xs sm:text-sm font-medium ${
+                              msg.isMe
+                                ? "bg-primary text-primary-content rounded-br-xs"
+                                : "bg-base-200 text-base-content border border-base-300/70 rounded-bl-xs"
+                            }`}
+                          >
+                            <p>{msg.text}</p>
+                            <span
+                              className={`block text-[9px] text-right mt-1 font-mono ${
+                                msg.isMe ? "text-primary-content/80" : "text-base-content/50"
+                              }`}
+                            >
+                              {msg.time} {msg.isMe && "✓✓"}
+                            </span>
+                          </div>
+                        )}
+                      </motion.div>
+                    ))}
+                  </AnimatePresence>
+
+                  {/* Typing Indicator */}
+                  <div className="flex items-center gap-2 text-base-content/50 text-[10px]">
+                    <span>{demoContacts[activeDemoContact].name.split(" ")[0]} is active</span>
+                    <span className="flex gap-0.5">
+                      <span className="size-1 rounded-full bg-primary animate-bounce" />
+                      <span className="size-1 rounded-full bg-accent animate-bounce [animation-delay:0.2s]" />
+                      <span className="size-1 rounded-full bg-secondary animate-bounce [animation-delay:0.4s]" />
+                    </span>
+                  </div>
+                </div>
+
+                {/* Live Message Input Bar */}
+                <form
+                  onSubmit={handleSendDemoMessage}
+                  className="p-3 bg-base-200/50 border-t border-base-300 flex items-center gap-2 shrink-0"
+                >
+                  <span className="text-base cursor-pointer hover:scale-110 transition-transform">
+                    😊
+                  </span>
+                  <span className="text-base cursor-pointer hover:scale-110 transition-transform">
+                    📎
+                  </span>
+                  <input
+                    type="text"
+                    value={demoInput}
+                    onChange={(e) => setDemoInput(e.target.value)}
+                    placeholder="Type a test message..."
+                    className="input input-bordered input-sm flex-1 text-xs rounded-xl focus:outline-none focus:border-primary"
+                  />
+                  <button
+                    type="submit"
+                    className="btn btn-primary btn-sm btn-circle shrink-0 shadow-sm"
+                    title="Send"
+                  >
+                    🚀
+                  </button>
+                </form>
+              </div>
+            </div>
+          </div>
+        </motion.div>
+      </section>
+
+      {/* STRUCTURED SAAS FEATURE GRID (6 Cards) */}
+      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-base-200/50 border-t border-base-300/80 relative">
+        <div className="max-w-6xl mx-auto space-y-12">
+          {/* Section Header */}
+          <div className="text-center max-w-2xl mx-auto space-y-3">
+            <span className="badge badge-primary font-bold text-xs px-3 py-1 rounded-full">
+              Features
+            </span>
+            <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight">
+              Engineered for Speed, Clarity & Privacy
+            </h2>
+            <p className="text-base-content/70 text-sm sm:text-base">
+              Everything you need for effortless real-time communication without cluttered bloat.
+            </p>
+          </div>
+
+          {/* 6 Feature Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[
+              {
+                icon: "⚡",
+                title: "Instant WebSocket Sync",
+                desc: "Bi-directional WebSocket streams deliver messages in sub-15ms with full delivery verification checkmarks.",
+                badge: "Real-Time",
+              },
+              {
+                icon: "🖼️",
+                title: "Instant Photo & Media Sharing",
+                desc: "Send high-res photos and documents with integrated full-screen lightbox zoom, 90° rotation, and fast downloads.",
+                badge: "Media",
+              },
+              {
+                icon: "🎨",
+                title: "8 Handcrafted Themes",
+                desc: "Switch between modern Dark, Light, Cyberpunk, Spotify, and Claude color palettes on the fly.",
+                badge: "Styling",
+              },
+              {
+                icon: "🔒",
+                title: "Encrypted Auth & Google OAuth",
+                desc: "Secure authentication using verified JSON Web Tokens (JWT) and one-click Google OAuth sign-in.",
+                badge: "Security",
+              },
+              {
+                icon: "🟢",
+                title: "Multi-Socket User Presence",
+                desc: "Accurate real-time online/offline presence tracking that gracefully handles multi-tab browsing.",
+                badge: "Presence",
+              },
+              {
+                icon: "📁",
+                title: "Documents, Code & Audio",
+                desc: "Attach PDFs, spreadsheets, presentations, code snippets, and archive files up to 50MB with ease.",
+                badge: "Files",
+              },
+            ].map(({ icon, title, desc, badge }) => (
+              <motion.div
+                key={title}
+                whileHover={{ y: -4, scale: 1.01 }}
+                transition={{ duration: 0.2 }}
+                className="card bg-base-100 p-6 rounded-3xl border border-base-300 shadow-sm hover:shadow-xl hover:border-primary/40 transition-all text-left space-y-3"
+              >
+                <div className="flex items-center justify-between">
+                  <div className="size-12 rounded-2xl bg-primary/10 text-primary flex items-center justify-center text-2xl font-bold shadow-2xs">
+                    {icon}
+                  </div>
+                  <span className="badge badge-neutral text-[10px] font-semibold">{badge}</span>
+                </div>
+                <h3 className="font-extrabold text-base text-base-content">{title}</h3>
+                <p className="text-xs sm:text-sm text-base-content/65 leading-relaxed">{desc}</p>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* HOW IT WORKS (3 Step Process) */}
+      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-base-100 relative">
+        <div className="max-w-5xl mx-auto space-y-12 text-center">
+          <div className="space-y-3">
+            <span className="badge badge-accent font-bold text-xs px-3 py-1 rounded-full">
+              Workflow
+            </span>
+            <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight">
+              Start Chatting in 3 Simple Steps
+            </h2>
+            <p className="text-base-content/70 text-sm max-w-lg mx-auto">
+              Get up and running in under 30 seconds with no complicated setup.
+            </p>
+          </div>
+
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-left">
             {[
               {
                 step: "01",
-                title: "Sign Up Easily",
-                desc: "Register with your email or log in instantly with your Google account in one click.",
-                color: "bg-primary text-primary-content",
-                borderGlow: "hover:border-primary/50",
+                title: "Create Free Account",
+                desc: "Sign up instantly with your email address or authenticate in one click via Google OAuth.",
+                tag: "Sign Up",
               },
               {
                 step: "02",
-                title: "Find Your Friends",
-                desc: "Search through active contacts, view real-time online status badges, and pick someone to chat with.",
-                color: "bg-accent text-accent-content",
-                borderGlow: "hover:border-accent/50",
+                title: "Connect with Contacts",
+                desc: "Browse through registered friends with live green presence badges indicating who is currently online.",
+                tag: "Discover",
               },
               {
                 step: "03",
-                title: "Chat & Customize",
-                desc: "Enjoy instant WebSocket messaging, quick emoji responses, and custom theme styling.",
-                color: "bg-secondary text-secondary-content",
-                borderGlow: "hover:border-secondary/50",
+                title: "Share & Collaborate",
+                desc: "Send instant messages, react with emojis, and share high-res photos and documents with zero lag.",
+                tag: "Chat",
               },
-            ].map(({ step, title, desc, color, borderGlow }, idx) => (
-              <motion.div
+            ].map(({ step, title, desc, tag }) => (
+              <div
                 key={step}
-                initial={{ opacity: 0, y: 40 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, margin: "-40px" }}
-                transition={{ duration: 0.5, delay: idx * 0.15, ease: "easeOut" }}
-                whileHover={{ y: -8, scale: 1.02 }}
-                className={`card bg-base-200/60 p-6 rounded-3xl border border-base-300/50 shadow-md hover:shadow-2xl ${borderGlow} transition-all duration-300 group`}
+                className="card bg-base-200/70 p-6 rounded-3xl border border-base-300/80 shadow-sm hover:shadow-lg transition-all space-y-3"
               >
-                <motion.div
-                  whileHover={{ rotate: [0, -10, 10, 0] }}
-                  transition={{ duration: 0.4 }}
-                  className={`size-12 rounded-2xl ${color} font-black text-lg flex items-center justify-center mb-4 shadow-sm`}
-                >
-                  {step}
-                </motion.div>
-                <h3 className="font-bold text-lg text-base-content group-hover:text-primary transition-colors">
-                  {title}
-                </h3>
-                <p className="text-xs sm:text-sm text-base-content/60 mt-2 leading-relaxed">
-                  {desc}
-                </p>
-              </motion.div>
+                <div className="flex items-center justify-between">
+                  <span className="font-mono font-black text-2xl text-primary">{step}</span>
+                  <span className="badge badge-primary/10 text-primary text-[10px] font-bold">
+                    {tag}
+                  </span>
+                </div>
+                <h3 className="font-bold text-base text-base-content">{title}</h3>
+                <p className="text-xs sm:text-sm text-base-content/65 leading-relaxed">{desc}</p>
+              </div>
             ))}
           </div>
-
-          {/* Call to Action Banner with Entrance Animation */}
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95, y: 30 }}
-            whileInView={{ opacity: 1, scale: 1, y: 0 }}
-            viewport={{ once: true, margin: "-40px" }}
-            transition={{ duration: 0.6, delay: 0.2, ease: "easeOut" }}
-            whileHover={{ scale: 1.01 }}
-            className="card bg-gradient-to-r from-primary via-accent to-secondary text-primary-content p-8 sm:p-12 rounded-3xl shadow-2xl flex flex-col sm:flex-row items-center justify-between gap-6 text-left relative overflow-hidden"
-          >
-            <div className="absolute inset-0 bg-white/5 opacity-0 hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
-            <div className="space-y-1 relative z-10">
-              <h3 className="text-2xl sm:text-3xl font-extrabold tracking-tight">Ready to join the conversation?</h3>
-              <p className="text-primary-content/80 text-xs sm:text-sm font-medium">Create your free account today and start messaging.</p>
-            </div>
-            <motion.button
-              whileHover={{ scale: 1.06 }}
-              whileTap={{ scale: 0.96 }}
-              onClick={() => navigate("/register")}
-              className="btn bg-white text-primary border-none btn-md sm:btn-lg rounded-2xl font-bold px-8 shadow-lg hover:bg-white/90 whitespace-nowrap relative z-10"
-            >
-              Get Started Free
-            </motion.button>
-          </motion.div>
-
         </div>
       </section>
-      {/* TWO PEOPLE CHATTING INTERACTIVE ANIMATION AT THE BOTTOM */}
-      <section className="py-20 px-4 bg-base-200/80 border-t border-base-300/60 relative overflow-hidden">
-        {/* Ambient background glows */}
-        <div className="absolute top-1/2 left-1/4 -translate-y-1/2 size-96 bg-primary/15 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute bottom-10 right-1/4 size-96 bg-accent/15 rounded-full blur-3xl pointer-events-none" />
 
-        <div className="max-w-4xl mx-auto space-y-8 relative z-10 text-center">
-
-          {/* Section Header */}
-          <motion.div
-            initial={{ opacity: 0, y: 25 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: "-50px" }}
-            transition={{ duration: 0.6, ease: "easeOut" }}
-            className="max-w-xl mx-auto space-y-2.5"
-          >
-            <span className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-success/15 text-success font-extrabold text-xs border border-success/30 shadow-xs">
-              <span className="size-2 rounded-full bg-success animate-ping" />
-              <span>Live WebSocket Conversation</span>
-            </span>
-            <h2 className="text-2xl sm:text-4xl font-extrabold tracking-tight text-base-content">
-              Experience Real-Time Chatting
-            </h2>
-            <p className="text-base-content/65 text-xs sm:text-sm font-medium">
-              Zero lag, instantaneous delivery, and lively interactions between team members.
-            </p>
-          </motion.div>
-
-          {/* Visual Interactive Chat Arena */}
-          <motion.div
-            initial={{ opacity: 0, y: 35 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: "-40px" }}
-            transition={{ duration: 0.7, ease: "easeOut" }}
-            className="card bg-base-100/90 backdrop-blur-xl p-5 sm:p-8 rounded-3xl border border-base-300/60 shadow-2xl space-y-6 relative overflow-hidden text-left"
-          >
-            {/* Top Interactive Status Bar between 2 Avatars */}
-            <div className="flex items-center justify-between border-b border-base-200/80 pb-4">
-              {/* Person 1: Alex */}
-              <motion.div
-                animate={{ y: [0, -4, 0] }}
-                transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-                className="flex items-center gap-3"
-              >
-                <div className="relative">
-                  <div className="size-11 sm:size-12 rounded-2xl bg-gradient-to-tr from-primary to-accent text-primary-content font-black text-lg flex items-center justify-center shadow-md">
-                    👨‍💻
-                  </div>
-                  <span className="absolute -bottom-1 -right-1 size-3.5 bg-success rounded-full ring-2 ring-base-100 animate-pulse" />
-                </div>
-                <div>
-                  <h4 className="font-extrabold text-xs sm:text-sm text-base-content leading-tight">Alex Rivera</h4>
-                  <span className="text-[10px] text-success font-bold flex items-center gap-1">
-                    <span className="size-1.5 rounded-full bg-success inline-block" /> Online
-                  </span>
-                </div>
-              </motion.div>
-
-              {/* WebSocket Live Connection Pulse */}
-              <div className="hidden sm:flex flex-col items-center gap-1">
-                <div className="flex items-center gap-2">
-                  <motion.span
-                    animate={{ scale: [1, 1.3, 1], opacity: [0.5, 1, 0.5] }}
-                    transition={{ duration: 1.5, repeat: Infinity }}
-                    className="size-2.5 rounded-full bg-primary shadow-xs"
-                  />
-                  <div className="w-20 h-0.5 bg-gradient-to-r from-primary via-accent to-secondary rounded-full" />
-                  <motion.span
-                    animate={{ scale: [1, 1.3, 1], opacity: [0.5, 1, 0.5] }}
-                    transition={{ duration: 1.5, repeat: Infinity, delay: 0.75 }}
-                    className="size-2.5 rounded-full bg-secondary shadow-xs"
-                  />
-                </div>
-                <span className="text-[9px] font-extrabold text-base-content/45 uppercase tracking-wider">
-                  Live Socket Stream
-                </span>
-              </div>
-
-              {/* Person 2: Maya */}
-              <motion.div
-                animate={{ y: [0, -4, 0] }}
-                transition={{ duration: 3, repeat: Infinity, ease: "easeInOut", delay: 1.5 }}
-                className="flex items-center gap-3 flex-row-reverse"
-              >
-                <div className="relative">
-                  <div className="size-11 sm:size-12 rounded-2xl bg-gradient-to-tr from-secondary to-accent text-secondary-content font-black text-lg flex items-center justify-center shadow-md">
-                    👩‍💼
-                  </div>
-                  <span className="absolute -bottom-1 -left-1 size-3.5 bg-success rounded-full ring-2 ring-base-100 animate-pulse" />
-                </div>
-                <div className="text-right">
-                  <h4 className="font-extrabold text-xs sm:text-sm text-base-content leading-tight">Maya Chen</h4>
-                  <span className="text-[10px] text-success font-bold flex items-center justify-end gap-1">
-                    <span className="size-1.5 rounded-full bg-success inline-block" /> Online
-                  </span>
-                </div>
-              </motion.div>
+      {/* BOTTOM CALL TO ACTION */}
+      <section className="py-16 px-4 sm:px-6 lg:px-8 bg-base-200/60 border-t border-base-300">
+        <div className="max-w-4xl mx-auto text-center">
+          <div className="card bg-gradient-to-r from-primary via-accent to-secondary text-primary-content p-8 sm:p-12 rounded-3xl shadow-2xl flex flex-col sm:flex-row items-center justify-between gap-6 text-left relative overflow-hidden">
+            <div className="space-y-1.5 z-10">
+              <h3 className="text-2xl sm:text-3xl font-extrabold tracking-tight">
+                Ready for effortless real-time messaging?
+              </h3>
+              <p className="text-primary-content/85 text-xs sm:text-sm font-medium">
+                Join Mingo today and experience seamless team communication.
+              </p>
             </div>
-
-            {/* Conversation Messages Flow */}
-            <div className="space-y-4 py-2">
-              {/* Message 1: Alex */}
-              <motion.div
-                initial={{ opacity: 0, x: -25 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: 0.1 }}
-                className="flex items-end gap-2.5 justify-start"
-              >
-                <div className="size-7 rounded-xl bg-primary/20 text-primary text-xs font-bold flex items-center justify-center shrink-0">
-                  👨‍💻
-                </div>
-                <div className="bg-base-200/80 p-3.5 rounded-2xl rounded-bl-xs border border-base-300/80 shadow-xs max-w-[85%] sm:max-w-[70%] space-y-1">
-                  <p className="text-[11px] font-bold text-primary">Alex Rivera</p>
-                  <p className="text-xs sm:text-sm text-base-content font-medium leading-relaxed">
-                    Hey Maya! Have you tried the new real-time chat features on Mingo? ⚡
-                  </p>
-                  <div className="flex items-center justify-end gap-1 text-[9px] text-base-content/40">
-                    <span>10:42 AM</span>
-                  </div>
-                </div>
-              </motion.div>
-
-              {/* Message 2: Maya */}
-              <motion.div
-                initial={{ opacity: 0, x: 25 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: 0.5 }}
-                className="flex items-end gap-2.5 justify-end"
-              >
-                <div className="bg-primary text-primary-content p-3.5 rounded-2xl rounded-br-xs shadow-md max-w-[85%] sm:max-w-[70%] space-y-1">
-                  <p className="text-[11px] font-bold text-primary-content/85 text-left">Maya Chen</p>
-                  <p className="text-xs sm:text-sm font-medium leading-relaxed text-left">
-                    Yes! The messages send with zero lag and switching themes on the fly is super smooth! ✨🔥
-                  </p>
-                  <div className="flex items-center justify-end gap-1 text-[9px] text-primary-content/75">
-                    <span>10:42 AM</span>
-                    <span className="font-bold">✓✓</span>
-                  </div>
-                </div>
-                <div className="size-7 rounded-xl bg-secondary/20 text-secondary text-xs font-bold flex items-center justify-center shrink-0">
-                  👩‍💼
-                </div>
-              </motion.div>
-
-              {/* Message 3: Alex */}
-              <motion.div
-                initial={{ opacity: 0, x: -25 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: 0.9 }}
-                className="flex items-end gap-2.5 justify-start"
-              >
-                <div className="size-7 rounded-xl bg-primary/20 text-primary text-xs font-bold flex items-center justify-center shrink-0">
-                  👨‍💻
-                </div>
-                <div className="bg-base-200/80 p-3.5 rounded-2xl rounded-bl-xs border border-base-300/80 shadow-xs max-w-[85%] sm:max-w-[70%] space-y-1">
-                  <p className="text-[11px] font-bold text-primary">Alex Rivera</p>
-                  <p className="text-xs sm:text-sm text-base-content font-medium leading-relaxed">
-                    Awesome! Let's get the whole engineering team onboarded right away! 🚀🎉
-                  </p>
-                  <div className="flex items-center justify-between text-[9px] text-base-content/40 pt-1">
-                    <span className="inline-flex gap-1 text-xs">🚀 👏 💯</span>
-                    <span>10:43 AM</span>
-                  </div>
-                </div>
-              </motion.div>
-
-              {/* Live Animated Typing Indicator for Maya */}
-              <motion.div
-                initial={{ opacity: 0 }}
-                whileInView={{ opacity: 1 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.4, delay: 1.3 }}
-                className="flex items-center gap-2 justify-end pr-9"
-              >
-                <span className="text-[11px] text-base-content/50 font-medium">Maya is typing</span>
-                <div className="flex items-center gap-1 bg-base-200/80 px-2.5 py-1.5 rounded-full border border-base-300 shadow-xs">
-                  <motion.span
-                    animate={{ y: [0, -3, 0] }}
-                    transition={{ duration: 0.6, repeat: Infinity, delay: 0 }}
-                    className="size-1.5 rounded-full bg-primary"
-                  />
-                  <motion.span
-                    animate={{ y: [0, -3, 0] }}
-                    transition={{ duration: 0.6, repeat: Infinity, delay: 0.2 }}
-                    className="size-1.5 rounded-full bg-accent"
-                  />
-                  <motion.span
-                    animate={{ y: [0, -3, 0] }}
-                    transition={{ duration: 0.6, repeat: Infinity, delay: 0.4 }}
-                    className="size-1.5 rounded-full bg-secondary"
-                  />
-                </div>
-              </motion.div>
-            </div>
-          </motion.div>
-
+            <button
+              onClick={() => navigate("/register")}
+              className="btn bg-white text-primary hover:bg-white/90 border-0 btn-lg rounded-2xl font-extrabold px-8 shadow-xl whitespace-nowrap z-10 hover:scale-105 transition-transform"
+            >
+              Get Started Free
+            </button>
+          </div>
         </div>
       </section>
 
       {/* FOOTER */}
-      <footer className="border-t border-base-300 bg-base-100 py-8 px-4 text-center text-xs text-base-content/60">
-        <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-2">
-            <div className="size-7 rounded-lg bg-primary text-primary-content font-bold flex items-center justify-center">
+      <footer className="border-t border-base-300 bg-base-100 py-10 px-4 sm:px-6 text-xs text-base-content/60">
+        <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 text-center sm:text-left">
+          <div className="flex items-center gap-2.5">
+            <div className="size-8 rounded-xl bg-primary text-primary-content font-bold flex items-center justify-center text-base shadow-sm">
               💬
             </div>
-            <span className="font-extrabold text-sm text-base-content">Mingo Chat</span>
+            <div>
+              <span className="font-black text-sm text-base-content tracking-tight">
+                Mingo Chat
+              </span>
+              <p className="text-[10px] text-base-content/50">Modern Real-Time Messaging</p>
+            </div>
           </div>
 
           <p>© {new Date().getFullYear()} Mingo Chat Application. All rights reserved.</p>
 
-          <div className="flex items-center gap-4 font-semibold">
-            <button onClick={() => navigate("/contact")} className="hover:text-primary transition-colors">
-              Contact Us
+          <div className="flex items-center gap-5 font-semibold">
+            <button
+              onClick={() => navigate("/contact")}
+              className="hover:text-primary transition-colors cursor-pointer"
+            >
+              Contact
             </button>
-            <button onClick={() => navigate("/register")} className="hover:text-primary transition-colors">
-              Get Started
+            <button
+              onClick={() => navigate("/login")}
+              className="hover:text-primary transition-colors cursor-pointer"
+            >
+              Sign In
+            </button>
+            <button
+              onClick={() => navigate("/register")}
+              className="hover:text-primary transition-colors cursor-pointer"
+            >
+              Register
             </button>
           </div>
         </div>

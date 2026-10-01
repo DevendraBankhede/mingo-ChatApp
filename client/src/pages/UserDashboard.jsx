@@ -4,14 +4,9 @@ import api from "../config/api";
 import { useNavigate } from "react-router-dom";
 
 const THEMES = [
-  { id: "light", name: "Light", icon: "☀️", bg: "#ffffff", primary: "#4f46e5", label: "Clean & Bright" },
-  { id: "dark", name: "Dark", icon: "🌙", bg: "#1f2937", primary: "#6366f1", label: "Modern Dark" },
-  { id: "black", name: "OLED Black", icon: "🖤", bg: "#000000", primary: "#38bdf8", label: "Deep Black" },
-  { id: "spotify", name: "Spotify", icon: "🎧", bg: "#121212", primary: "#1db954", label: "Vibrant Green" },
-  { id: "claude", name: "Claude", icon: "🤖", bg: "#fbf7ee", primary: "#d97706", label: "Warm Editorial" },
-  { id: "corporate", name: "Corporate", icon: "💼", bg: "#f4f6f8", primary: "#2563eb", label: "Professional Blue" },
-  { id: "ghibli", name: "Ghibli", icon: "🌱", bg: "#f0f7f4", primary: "#059669", label: "Soft Pastel" },
-  { id: "halloween", name: "Halloween", icon: "🎃", bg: "#1a1025", primary: "#f97316", label: "Neon Orange" },
+  { id: "light", name: "White", icon: "☀️", bg: "#ffffff", primary: "#4f46e5", label: "Clean & Bright White" },
+  { id: "dark", name: "Dark", icon: "🌙", bg: "#1f2937", primary: "#6366f1", label: "Modern Dark Mode" },
+  { id: "black", name: "Black", icon: "🖤", bg: "#000000", primary: "#38bdf8", label: "OLED Deep Black" },
 ];
 
 const UserDashboard = () => {

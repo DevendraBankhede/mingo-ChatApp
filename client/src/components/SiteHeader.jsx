@@ -36,9 +36,11 @@ const SiteHeader = () => {
           className="flex items-center gap-2.5 cursor-pointer group"
           onClick={() => navigate("/")}
         >
-          <div className="size-9 rounded-xl bg-gradient-to-tr from-primary via-accent to-secondary flex items-center justify-center shadow-md group-hover:scale-105 transition-transform">
-            <span className="text-white text-lg">💬</span>
-          </div>
+          <img
+            src="/favicon.svg"
+            alt="Mingo Logo"
+            className="size-9 rounded-xl shadow-md group-hover:scale-105 transition-transform object-contain"
+          />
           <div className="flex flex-col">
             <span className="text-xl font-extrabold tracking-tight bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
               Mingo
@@ -99,14 +101,9 @@ const SiteHeader = () => {
           onChange={handleThemeChange}
           aria-label="Select Theme"
         >
-          <option value="light">☀️ Light</option>
+          <option value="light">☀️ White</option>
           <option value="dark">🌙 Dark</option>
           <option value="black">🖤 Black</option>
-          <option value="spotify">🎧 Spotify</option>
-          <option value="claude">🤖 Claude</option>
-          <option value="corporate">💼 Corporate</option>
-          <option value="ghibli">🌱 Ghibli</option>
-          <option value="halloween">🎃 Halloween</option>
         </select>
       </div>
     </header>
